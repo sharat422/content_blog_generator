@@ -1,0 +1,175 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ---------- Design System (tokens) ---------- */
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 240 10% 3.9%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 240 10% 3.9%;
+
+    --primary: 262.1 83.3% 57.8%;
+    --primary-foreground: 210 20% 98%;
+
+    --secondary: 220 14.3% 95.9%;
+    --secondary-foreground: 220.9 39.3% 11%;
+
+    --muted: 220 14.3% 95.9%;
+    --muted-foreground: 220 8.9% 46.1%;
+
+    --accent: 220 14.3% 95.9%;
+    --accent-foreground: 220.9 39.3% 11%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 20% 98%;
+
+    --border: 220 13% 91%;
+    --input: 220 13% 91%;
+    --ring: 262.1 83.3% 57.8%;
+
+    --radius: 0.75rem;
+
+    /* Custom brand colors */
+    --creative: 295.7 72.4% 59.8%;
+    --creative-foreground: 210 20% 98%;
+
+    --success: 142.1 76.2% 36.3%;
+    --warning: 32.6 94.6% 43.7%;
+    --info: 221.2 83.2% 53.3%;
+
+    /* Gradients */
+    --gradient-primary: linear-gradient(
+      135deg,
+      hsl(262.1 83.3% 57.8%),
+      hsl(295.7 72.4% 59.8%)
+    );
+    --gradient-hero: linear-gradient(
+      135deg,
+      hsl(262.1 83.3% 57.8% / 0.1),
+      hsl(295.7 72.4% 59.8% / 0.05)
+    );
+
+    /* Shadows */
+    --shadow-soft: 0 2px 8px hsl(220 13% 91% / 0.4);
+    --shadow-medium: 0 4px 16px hsl(220 13% 91% / 0.6);
+    --shadow-strong: 0 8px 32px hsl(220 13% 91% / 0.8);
+  }
+
+  .dark {
+    --background: 240 10% 3.9%;
+    --foreground: 0 0% 98%;
+    --card: 240 10% 3.9%;
+    --card-foreground: 0 0% 98%;
+
+    --primary: 262.1 83.3% 57.8%;
+    --primary-foreground: 210 20% 98%;
+
+    --secondary: 240 3.7% 15.9%;
+    --secondary-foreground: 0 0% 98%;
+
+    --muted: 240 3.7% 15.9%;
+    --muted-foreground: 240 5% 64.9%;
+
+    --accent: 240 3.7% 15.9%;
+    --accent-foreground: 0 0% 98%;
+
+    --border: 240 3.7% 15.9%;
+    --input: 240 3.7% 15.9%;
+    --ring: 262.1 83.3% 57.8%;
+
+    --gradient-primary: linear-gradient(
+      135deg,
+      hsl(262.1 83.3% 57.8%),
+      hsl(295.7 72.4% 59.8%)
+    );
+    --gradient-hero: linear-gradient(
+      135deg,
+      hsl(262.1 83.3% 57.8% / 0.15),
+      hsl(295.7 72.4% 59.8% / 0.1)
+    );
+
+    --shadow-soft: 0 2px 8px hsl(240 10% 3.9% / 0.4);
+    --shadow-medium: 0 4px 16px hsl(240 10% 3.9% / 0.6);
+    --shadow-strong: 0 8px 32px hsl(240 10% 3.9% / 0.8);
+  }
+}
+
+/* ---------- Base Theme Polishing ---------- */
+@layer base {
+  html,
+  body,
+  #root {
+    @apply h-full;
+  }
+
+  body {
+    @apply antialiased text-foreground bg-background;
+    background: var(--gradient-hero);
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    @apply font-bold tracking-tight;
+  }
+
+  /* Focus */
+  *:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px white, 0 0 0 4px hsl(var(--ring));
+  }
+
+  /* Selection */
+  ::selection {
+    background: hsl(var(--primary));
+    color: white;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-track {
+    background: hsl(var(--muted));
+  }
+  ::-webkit-scrollbar-thumb {
+    background: hsl(var(--border));
+    border-radius: 9999px;
+    border: 2px solid hsl(var(--muted));
+  }
+  .dark ::-webkit-scrollbar-track {
+    background: hsl(var(--muted));
+  }
+  .dark ::-webkit-scrollbar-thumb {
+    background: hsl(var(--accent));
+    border-color: hsl(var(--muted));
+  }
+}
+
+/* ---------- Reusable Patterns ---------- */
+@layer components {
+  .container-app {
+    @apply mx-auto max-w-7xl px-4 sm:px-6 lg:px-8;
+  }
+  .card-grid {
+    @apply grid gap-6 sm:grid-cols-2 lg:grid-cols-3;
+  }
+  .section {
+    @apply py-16 px-4 sm:px-6 lg:px-8;
+  }
+  .cta-button {
+    @apply rounded-2xl px-6 py-3 text-base font-semibold shadow-md transition hover:shadow-lg;
+  }
+}
+
