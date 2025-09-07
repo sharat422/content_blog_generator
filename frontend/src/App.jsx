@@ -3,6 +3,7 @@ import { Routes, Route } from "react-router-dom";
 import { motion } from "framer-motion";
 import { HelmetProvider } from "react-helmet-async";
 import { Helmet } from "react-helmet-async";
+import { Link } from "react-router-dom";
 
 // UI kit
 import Navbar from "./components/ui/Navbar";
@@ -16,6 +17,8 @@ import Testimonials from "./components/landing/Testimonials";
 // Pages
 import PricingPage from "./pages/PricingPage";
 import FeaturesPage from "./pages/FeaturesPage";
+import TermsPage from "./pages/TermsOfService";
+import PrivacyPage from "./pages/PrivacyPolicy";
 
 function HomePage() {
   const [prompt, setPrompt] = useState("");
@@ -158,7 +161,7 @@ function HomePage() {
 
       {/* Footer CTA */}
       <footer className="bg-white dark:bg-slate-900 py-10 text-center border-t border-slate-200 dark:border-slate-800">
-        <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-200">
+       {/*} <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-200">
           Ready to start creating?
         </h3>
         <p className="mt-1 text-slate-600 dark:text-slate-400">
@@ -168,6 +171,21 @@ function HomePage() {
           <Button size="lg" type="button">
             Get Started
           </Button>
+        </div> */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          
+          
+          <div className="border-t border-gray-800 ">
+            <div className="flex flex-col md:flex-row justify-between items-center">
+              <p className="text-gray-400 text-sm">
+                &copy; 2025 CreativeAI. All rights reserved.
+              </p>
+              <div className="flex space-x-6 mt-4 md:mt-0">
+                 <Link to="/privacy" className="text-gray-400 hover:text-white text-sm transition-colors">Privacy Policy</Link>
+                <Link to="/terms" className="text-gray-400 hover:text-white text-sm transition-colors">Terms of Service</Link>
+              </div>
+            </div>
+          </div>
         </div>
       </footer>
     </>
@@ -183,6 +201,8 @@ export default function App() {
         <Route path="/" element={<HomePage />} />
         <Route path="/pricing" element={<PricingPage />} />
         <Route path="/features" element={<FeaturesPage />} />
+        <Route path="/privacy" element={<PrivacyPage />} />
+        <Route path="/terms" element={<TermsPage />} />
       </Routes>
     </div>
     </HelmetProvider>

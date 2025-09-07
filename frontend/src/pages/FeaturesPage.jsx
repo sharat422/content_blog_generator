@@ -22,24 +22,24 @@ const features = [
       "Save hours of work with instant content generation powered by cutting-edge AI.",
     icon: Zap,
   },
-  {
-    name: "Collaboration Tools",
-    description:
-      "Invite your team, manage projects, and co-create content together in real-time.",
-    icon: Share2,
-  },
-  {
-    name: "Custom Templates",
-    description:
-      "Choose from a wide range of content templates or build your own tailored to your needs.",
-    icon: Layers,
-  },
-  {
-    name: "Analytics Dashboard",
-    description:
-      "Track engagement and performance of your generated content with built-in insights.",
-    icon: BarChart,
-  },
+   //{
+   // name: "Collaboration Tools",
+   // description:
+    //  "Invite your team, manage projects, and co-create content together in real-time.",
+    //icon: Share2,
+  //},
+  //{
+   // name: "Custom Templates",
+    //description:
+    //  "Choose from a wide range of content templates or build your own tailored to your needs.",
+    //icon: Layers,
+  //},
+  //{
+   // name: "Analytics Dashboard",
+   // description:
+   //   "Track engagement and performance of your generated content with built-in insights.",
+   // icon: BarChart,
+  //}, */},
   {
     name: "Enterprise-Grade Security",
     description:

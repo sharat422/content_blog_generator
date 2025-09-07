@@ -1,17 +1,20 @@
 import React from "react";
 
-/**
- * Button component with variants, sizes, loading, icons, and accessibility.
- *
- * Props:
- * - variant: "primary" | "secondary" | "outline" | "ghost" | "destructive" | "success" | "warning"
- * - size: "sm" | "md" | "lg" | "icon"
- * - leftIcon / rightIcon: React nodes (e.g., <svg />)
- * - isLoading: boolean
- * - fullWidth: boolean
- * - className: string
- */
-const cx = (...classes) => classes.filter(Boolean).join(" ");
+type ButtonProps = {
+  children: React.ReactNode;
+  onClick?: React.MouseEventHandler<HTMLButtonElement>; // optional
+  type?: "button" | "submit" | "reset";
+  variant?: "primary" | "secondary" | "outline" | "ghost" | "destructive" | "success" | "warning";
+  size?: "sm" | "md" | "lg" | "icon";
+  isLoading?: boolean;
+  disabled?: boolean;
+  leftIcon?: React.ReactNode;  // optional
+  rightIcon?: React.ReactNode; // optional
+  fullWidth?: boolean;
+  className?: string;
+} & React.ButtonHTMLAttributes<HTMLButtonElement>;
+
+const cx = (...classes: (string | false | undefined)[]) => classes.filter(Boolean).join(" ");
 
 export default function Button({
   children,
@@ -26,8 +29,8 @@ export default function Button({
   fullWidth = false,
   className,
   ...props
-}) {
-  const variants = {
+}: ButtonProps) {
+  const variants: Record<string, string> = {
     primary:
       "bg-indigo-600 text-white shadow-sm hover:bg-indigo-700 active:bg-indigo-800 disabled:bg-indigo-300",
     secondary:
@@ -44,7 +47,7 @@ export default function Button({
       "bg-amber-500 text-slate-900 hover:bg-amber-600 active:bg-amber-700 disabled:bg-amber-300",
   };
 
-  const sizes = {
+  const sizes: Record<string, string> = {
     sm: "h-9 px-3 text-sm",
     md: "h-10 px-4 text-sm",
     lg: "h-12 px-6 text-base",
@@ -81,4 +84,3 @@ export default function Button({
     </button>
   );
 }
-
