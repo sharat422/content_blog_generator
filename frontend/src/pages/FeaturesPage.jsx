@@ -59,7 +59,7 @@ export default function FeaturesPage() {
         transition={{ duration: 0.4 }}
       >
         <h1 className="text-4xl font-bold text-slate-900 dark:text-white">
-          Why Choose CreativeAI?
+          Why Choose WriteSwift?
         </h1>
         <p className="mt-3 text-slate-600 dark:text-slate-300 max-w-2xl mx-auto">
           Our platform combines advanced AI with user-friendly tools so you can

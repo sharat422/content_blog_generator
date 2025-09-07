@@ -50,7 +50,7 @@ export default function Navbar() {
             </div>
             <div>
               <h1 className="text-xl font-bold text-gradient">
-                CreativeAI
+                WriteSwift
               </h1>
               <Badge variant="secondary" className="text-xs -mt-1">
                 Beta

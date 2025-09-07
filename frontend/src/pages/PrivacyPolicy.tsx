@@ -23,7 +23,7 @@ export default function PrivacyPolicy() {
                 <p>
                   This may include personal information such as your name, email address, 
                   billing details (if applicable), and usage data related to how you interact 
-                  with CreativeAI.
+                  with WriteSwift.
                 </p>
               </div>
             </section>
@@ -33,7 +33,7 @@ export default function PrivacyPolicy() {
               <div className="text-muted-foreground leading-relaxed space-y-2">
                 <p>We use the information we collect to:</p>
                 <ul className="list-disc pl-6 space-y-1">
-                  <li>Provide, maintain, and improve the CreativeAI platform</li>
+                  <li>Provide, maintain, and improve the WriteSwift platform</li>
                   <li>Process transactions and manage your account</li>
                   <li>Send you technical notices, updates, and support messages</li>
                   <li>Respond to your questions and support requests</li>
@@ -89,7 +89,7 @@ export default function PrivacyPolicy() {
             <section className="space-y-4">
               <h2 className="text-2xl font-semibold text-foreground">7. Cookies and Tracking</h2>
               <p className="text-muted-foreground leading-relaxed">
-                CreativeAI may use cookies and similar technologies to improve your user experience. 
+                WriteSwift may use cookies and similar technologies to improve your user experience. 
                 You can control cookies in your browser, but disabling them may affect the functionality of the Service.
               </p>
             </section>
@@ -97,7 +97,7 @@ export default function PrivacyPolicy() {
             <section className="space-y-4">
               <h2 className="text-2xl font-semibold text-foreground">8. Children's Privacy</h2>
               <p className="text-muted-foreground leading-relaxed">
-                CreativeAI is not intended for children under 13. We do not knowingly collect data 
+                WriteSwift is not intended for children under 13. We do not knowingly collect data
                 from children. If we become aware of such data, we will delete it promptly.
               </p>
             </section>
@@ -106,7 +106,7 @@ export default function PrivacyPolicy() {
               <h2 className="text-2xl font-semibold text-foreground">9. Changes to This Policy</h2>
               <p className="text-muted-foreground leading-relaxed">
                 We may update this Privacy Policy occasionally. Changes will be posted on this page with
-                an updated "Last updated" date. Your continued use of CreativeAI constitutes acceptance of updates.
+                an updated "Last updated" date. Your continued use of WriteSwift constitutes acceptance of updates.
               </p>
             </section>
 
