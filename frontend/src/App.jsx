@@ -40,7 +40,7 @@ function HomePage() {
     setLoading(true);
     setError("");
     setResult("");
-const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
+const API_BASE_URL = import.meta.env.VITE_API_URL;
     try {
       const res = await fetch(`${API_BASE_URL}/api/generator/`, {
         method: "POST",
