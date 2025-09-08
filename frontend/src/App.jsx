@@ -40,7 +40,11 @@ function HomePage() {
     setLoading(true);
     setError("");
     setResult("");
-const API_BASE_URL = import.meta.env.VITE_API_URL;
+
+    // ✅ Use Render in production, localhost in dev
+    const API_BASE_URL =
+      import.meta.env.VITE_API_URL || "http://localhost:8000";
+
     try {
       const res = await fetch(`${API_BASE_URL}/api/generator/`, {
         method: "POST",
@@ -48,18 +52,19 @@ const API_BASE_URL = import.meta.env.VITE_API_URL;
         body: JSON.stringify({ prompt, template }),
       });
 
+      if (!res.ok) {
+        throw new Error(`Server error: ${res.status}`);
+      }
+
       const data = await res.json();
 
-      // --- Transform content: remove title/heading, show only paragraphs ---
       if (data.content) {
         if (Array.isArray(data.content.sections)) {
-          setResult(
-            data.content.sections.map((sec) => sec.content).join("\n\n")
-          );
+          setResult(data.content.sections.map((sec) => sec.content).join("\n\n"));
         } else if (typeof data.content === "string") {
           setResult(data.content);
         } else {
-          setResult(JSON.stringify(data.content, null, 2)); // fallback
+          setResult(JSON.stringify(data.content, null, 2));
         }
       }
     } catch (err) {
@@ -72,7 +77,7 @@ const API_BASE_URL = import.meta.env.VITE_API_URL;
 
   return (
     <>
-    {/* ✅ SEO HEAD TAGS */}
+      {/* ✅ SEO HEAD TAGS */}
       <Helmet>
         <title>{seoTitle}</title>
         <meta name="description" content={seoDescription} />
@@ -86,6 +91,7 @@ const API_BASE_URL = import.meta.env.VITE_API_URL;
         <meta name="twitter:description" content={seoDescription} />
         <meta name="twitter:image" content="https://yourdomain.com/preview.png" />
       </Helmet>
+
       {/* Hero / Generator section */}
       <section className="flex-1 px-4 py-16 text-center">
         <h1 className="mx-auto max-w-2xl text-4xl font-bold text-slate-900 dark:text-slate-100">
@@ -105,10 +111,10 @@ const API_BASE_URL = import.meta.env.VITE_API_URL;
               className="mb-4 w-full rounded-lg border border-slate-300 p-2 text-sm dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
             >
               <option value="Blog Post">Blog Post</option>
-            <option value="Product Description">Product Description</option>
-            <option value="Social Media Post">Social Media Post</option>
-            <option value="Email">Email</option>
-            <option value="Report">Report</option>
+              <option value="Product Description">Product Description</option>
+              <option value="Social Media Post">Social Media Post</option>
+              <option value="Email">Email</option>
+              <option value="Report">Report</option>
             </select>
 
             {/* Prompt input */}
@@ -159,30 +165,27 @@ const API_BASE_URL = import.meta.env.VITE_API_URL;
       {/* Testimonials */}
       <Testimonials />
 
-      {/* Footer CTA */}
+      {/* Footer */}
       <footer className="bg-white dark:bg-slate-900 py-10 text-center border-t border-slate-200 dark:border-slate-800">
-       {/*} <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-200">
-          Ready to start creating?
-        </h3>
-        <p className="mt-1 text-slate-600 dark:text-slate-400">
-          Sign up now and supercharge your writing with AI.
-        </p>
-        <div className="mt-4">
-          <Button size="lg" type="button">
-            Get Started
-          </Button>
-        </div> */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          
-          
           <div className="border-t border-gray-800 ">
             <div className="flex flex-col md:flex-row justify-between items-center">
               <p className="text-gray-400 text-sm">
                 &copy; 2025 WriteSwift. All rights reserved.
               </p>
               <div className="flex space-x-6 mt-4 md:mt-0">
-                 <Link to="/privacy" className="text-gray-400 hover:text-white text-sm transition-colors">Privacy Policy</Link>
-                <Link to="/terms" className="text-gray-400 hover:text-white text-sm transition-colors">Terms of Service</Link>
+                <Link
+                  to="/privacy"
+                  className="text-gray-400 hover:text-white text-sm transition-colors"
+                >
+                  Privacy Policy
+                </Link>
+                <Link
+                  to="/terms"
+                  className="text-gray-400 hover:text-white text-sm transition-colors"
+                >
+                  Terms of Service
+                </Link>
               </div>
             </div>
           </div>
@@ -195,16 +198,16 @@ const API_BASE_URL = import.meta.env.VITE_API_URL;
 export default function App() {
   return (
     <HelmetProvider>
-    <div className="min-h-screen flex flex-col bg-slate-50 dark:bg-slate-950">
-      <Navbar />
-      <Routes>
-        <Route path="/" element={<HomePage />} />
-        <Route path="/pricing" element={<PricingPage />} />
-        <Route path="/features" element={<FeaturesPage />} />
-        <Route path="/privacy" element={<PrivacyPage />} />
-        <Route path="/terms" element={<TermsPage />} />
-      </Routes>
-    </div>
+      <div className="min-h-screen flex flex-col bg-slate-50 dark:bg-slate-950">
+        <Navbar />
+        <Routes>
+          <Route path="/" element={<HomePage />} />
+          <Route path="/pricing" element={<PricingPage />} />
+          <Route path="/features" element={<FeaturesPage />} />
+          <Route path="/privacy" element={<PrivacyPage />} />
+          <Route path="/terms" element={<TermsPage />} />
+        </Routes>
+      </div>
     </HelmetProvider>
   );
 }
