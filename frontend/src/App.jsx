@@ -40,9 +40,9 @@ function HomePage() {
     setLoading(true);
     setError("");
     setResult("");
-
+const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
     try {
-      const res = await fetch("http://localhost:8000/api/generator/", {
+      const res = await fetch(`${API_BASE_URL}/api/generator/`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ prompt, template }),
