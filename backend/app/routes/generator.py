@@ -2,7 +2,6 @@ from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from app.services.llm import llm_complete
 import logging
-import json
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -25,8 +24,7 @@ async def generate_content(req: GenerateRequest):
     logger.debug("Received request: %s", req.dict())
 
     template_instruction = TEMPLATE_INSTRUCTIONS.get(
-        req.template, 
-        "Write structured, professional content."
+        req.template, "Write structured, professional content."
     )
 
     messages = [
@@ -34,27 +32,25 @@ async def generate_content(req: GenerateRequest):
             "role": "system",
             "content": (
                 f"You are an expert content writer. Write content using template: {template_instruction}. "
-                "Return plain text only, without any JSON structure, headings, brackets, or extra quotes. "
+                "Return plain text only, no JSON, no brackets, no headings. "
                 "Separate paragraphs with line breaks. "
                 "Ensure the content is readable, structured, and professional."
             )
-            
         },
         {"role": "user", "content": req.prompt}
     ]
 
     try:
         raw_content = await llm_complete(messages)
+        logger.info("🔎 Raw LLM output: %s", raw_content)
 
-        # Ensure valid JSON
-        try:
-            structured_content = json.loads(raw_content)
-        except json.JSONDecodeError:
-            logger.warning("LLM returned invalid JSON, wrapping in fallback structure")
-            structured_content = {
-                "title": "Untitled",
-                "sections": [{"heading": "", "content": raw_content}]
-            }
+        if not raw_content:
+            raise ValueError("LLM returned empty response")
+
+        structured_content = {
+            "title": req.template,
+            "sections": [{"heading": "", "content": raw_content.strip()}],
+        }
 
         return {"content": structured_content}
 
