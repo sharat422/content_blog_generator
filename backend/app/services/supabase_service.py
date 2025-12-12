@@ -1,7 +1,6 @@
 # app/services/supabase_service.py
 
 import os
-import requests
 from datetime import datetime, timedelta, timezone
 from supabase import create_client, Client
 

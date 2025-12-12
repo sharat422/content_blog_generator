@@ -3,7 +3,6 @@
 import os
 import subprocess
 import uuid
-import requests 
 from pathlib import Path
 from typing import List, Optional
 

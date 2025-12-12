@@ -1,7 +1,6 @@
 # app/services/image_service.py
 
 import os
-import requests
 from typing import Optional
 from pathlib import Path
 from openai import OpenAI
