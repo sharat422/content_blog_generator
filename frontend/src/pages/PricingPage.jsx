@@ -1,160 +1,138 @@
+// src/pages/PricingPage.jsx
 import React from "react";
 import { motion } from "framer-motion";
 import { Check } from "lucide-react";
+import { supabase } from "../lib/supabaseClient";
+import { useAuth } from "../context/AuthContext";
+import { useNavigate } from "react-router-dom";
+
+const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:8000";
+
+const PRO_PRICE_ID =
+  import.meta.env.VITE_STRIPE_PRICE_ID_PRO || "price_1SYf2oLSGCDaShjEzUijuuGC";
 
 const tiers = [
   {
     name: "Starter",
     price: "Free",
-    description: "Get started with AI-powered content generation.",
-    features: [
-      "10 AI generations / month",
-      "Basic templates (Blog, Social Media)",
-      "Single user only",
-      "Community support",
-    ],
+    description: "Get started with AI writing.",
+    features: ["100 free credits", "Basic templates", "Community support"],
     cta: "Start Free",
-    priceId: null, // no checkout for free plan
+    priceId: "free",
     highlighted: false,
   },
   {
     name: "Pro",
-    price: "$19/mo",
-    description: "For freelancers & creators who want to scale content.",
+    price: "$11.99/mo",
+    description: "Perfect for creators scaling content.",
     features: [
-      "50,000 words / month",
+      "6000 credits",
       "All templates unlocked",
-      "Export to PDF, Word, Markdown",
-      "Tone & voice customization",
-      "Priority email support",
+      "Export tools",
+      "Tone customization",
+      "Priority support",
     ],
     cta: "Get Pro",
-    priceId: "price_12345", // 🔑 Replace with real Stripe Price ID
+    priceId: PRO_PRICE_ID,
     highlighted: true,
-  },
-  {
-    name: "Business",
-    price: "$59/mo",
-    description: "For teams & agencies creating content at scale.",
-    features: [
-      "200,000 words / month",
-      "Team collaboration (5 seats)",
-      "Brand voice customization",
-      "Analytics dashboard",
-      "API access & integrations",
-      "Priority live chat support",
-    ],
-    cta: "Get Business",
-    priceId: "price_67890", // 🔑 Replace with real Stripe Price ID
-    highlighted: false,
   },
 ];
 
 export default function PricingPage() {
+  const { user, plan, loading } = useAuth();
+  const navigate = useNavigate();
+
+  if (loading)
+    return (
+      <div className="min-h-screen flex items-center justify-center text-white">
+        Loading...
+      </div>
+    );
+
+  const normalizedPlan = plan?.toLowerCase();
+
+  const handleStartFree = () => {
+    if (user) navigate("/");
+    else navigate("/signup");
+  };
+
   const handleCheckout = async (priceId) => {
-    if (!priceId) return; // free plan → no checkout
+    if (!user) return navigate("/signup");
+    if (normalizedPlan === "pro") return;
 
-    try {
-      const res = await fetch("http://localhost:8000/create-checkout-session", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ priceId }),
-      });
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
 
-      const data = await res.json();
-      if (data.url) {
-        window.location.href = data.url; // redirect to Stripe Checkout
-      }
-    } catch (err) {
-      console.error("Checkout error:", err);
-    }
+    if (!session?.access_token) return alert("Please log in again.");
+
+    const res = await fetch(`${API_BASE}/api/billing/checkout`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${session.access_token}`,
+      },
+      body: JSON.stringify({ price_id: priceId }),
+    });
+
+    const data = await res.json();
+    if (data.checkout_url) window.location.href = data.checkout_url;
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 py-16 px-6">
-      {/* Header */}
+    <div className="min-h-screen bg-slate-950 text-white py-16 px-6">
       <motion.div
         className="text-center mb-16"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4 }}
       >
-        <h1 className="text-4xl font-bold text-slate-900 dark:text-white">
-          Pricing Plans
-        </h1>
-        <p className="mt-4 text-lg text-slate-600 dark:text-slate-300 max-w-2xl mx-auto">
-          Choose a plan that fits your needs. Upgrade anytime as your business
-          grows.
+        <h1 className="text-4xl font-bold">Pricing Plans</h1>
+        <p className="mt-3 opacity-70">
+          Choose the plan that fits your content creation workflow.
         </p>
       </motion.div>
 
-      {/* Pricing Tiers */}
-      <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3 max-w-6xl mx-auto">
-        {tiers.map((tier, i) => (
+      <div className="grid gap-8 sm:grid-cols-2 max-w-5xl mx-auto">
+        {tiers.map((tier, idx) => (
           <motion.div
             key={tier.name}
-            className={`flex flex-col rounded-2xl border shadow-md p-6 ${
+            className={`flex flex-col rounded-xl border p-6 shadow-md ${
               tier.highlighted
-                ? "bg-gradient-primary text-white"
-                : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800"
+                ? "bg-indigo-600 text-white"
+                : "bg-slate-900 text-white border-slate-800"
             }`}
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, delay: i * 0.1 }}
-            viewport={{ once: true }}
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: idx * 0.1 }}
           >
-            <h3
-              className={`text-2xl font-bold mb-2 ${
-                tier.highlighted ? "text-white" : "text-slate-900 dark:text-white"
-              }`}
-            >
-              {tier.name}
-            </h3>
-            <p
-              className={`mb-4 ${
-                tier.highlighted
-                  ? "text-white/90"
-                  : "text-slate-600 dark:text-slate-400"
-              }`}
-            >
-              {tier.description}
-            </p>
-
-            <div className="text-3xl font-bold mb-6">{tier.price}</div>
+            <h3 className="text-2xl font-semibold">{tier.name}</h3>
+            <div className="text-3xl font-bold my-4">{tier.price}</div>
 
             <ul className="space-y-3 flex-1">
-              {tier.features.map((feature) => (
-                <li key={feature} className="flex items-start space-x-2">
-                  <Check
-                    className={`h-5 w-5 flex-shrink-0 ${
-                      tier.highlighted
-                        ? "text-white"
-                        : "text-indigo-600 dark:text-indigo-400"
-                    }`}
-                  />
-                  <span
-                    className={
-                      tier.highlighted
-                        ? "text-white"
-                        : "text-slate-700 dark:text-slate-300"
-                    }
-                  >
-                    {feature}
-                  </span>
+              {tier.features.map((f) => (
+                <li key={f} className="flex items-start space-x-2">
+                  <Check className="w-5 h-5 text-green-400" />
+                  <span className="opacity-90">{f}</span>
                 </li>
               ))}
             </ul>
 
             <button
-              onClick={() => handleCheckout(tier.priceId)}
-              disabled={!tier.priceId}
-              className={`mt-6 w-full rounded-xl px-4 py-3 font-semibold transition ${
-                tier.highlighted
-                  ? "bg-white text-indigo-600 hover:bg-slate-100"
-                  : "bg-indigo-600 text-white hover:bg-indigo-700"
-              } ${!tier.priceId ? "opacity-50 cursor-not-allowed" : ""}`}
+              disabled={tier.name === "Pro" && normalizedPlan === "pro"}
+              onClick={() =>
+                tier.priceId === "free"
+                  ? handleStartFree()
+                  : handleCheckout(tier.priceId)
+              }
+              className={`mt-6 w-full py-3 rounded-lg font-semibold transition ${
+                tier.name === "Pro" && normalizedPlan === "pro"
+                  ? "bg-green-600 cursor-default"
+                  : "bg-white text-indigo-600 hover:bg-slate-200"
+              }`}
             >
-              {tier.cta}
+              {tier.name === "Pro" && normalizedPlan === "pro"
+                ? "Subscribed ✓"
+                : tier.cta}
             </button>
           </motion.div>
         ))}

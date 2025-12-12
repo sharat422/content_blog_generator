@@ -1,211 +1,54 @@
-import React, { useState } from "react";
+import React from "react";
 import { Routes, Route } from "react-router-dom";
-import { motion } from "framer-motion";
 import { HelmetProvider } from "react-helmet-async";
-import { Helmet } from "react-helmet-async";
-import { Link } from "react-router-dom";
+import { useAuth } from "./context/AuthContext"; // ✅ import from your AuthContext
+import ScrollToTopButton from "./components/ui/ScrollToTopButton";
+import TwinPage from "./pages/TwinPage";
 
 // UI kit
 import Navbar from "./components/ui/Navbar";
-import Button from "./components/ui/Button";
-import Card from "./components/ui/Card";
-
-// Landing sections
-import Features from "./components/landing/Features";
-import Testimonials from "./components/landing/Testimonials";
 
 // Pages
+import HomePage from "./pages/HomePage";
 import PricingPage from "./pages/PricingPage";
 import FeaturesPage from "./pages/FeaturesPage";
 import TermsPage from "./pages/TermsOfService";
 import PrivacyPage from "./pages/PrivacyPolicy";
+import LoginPage from "./pages/LoginPage";
+import SignupPage from "./pages/SignupPage";
+import VideoGeneratorPage from "./pages/VideoGeneratorPage";
+import ProtectedRoute from "./components/ProtectedRoute";
+import AccountBillingPage from "./pages/AccountBillingPage";
 
-function HomePage() {
-  const [prompt, setPrompt] = useState("");
-  const [template, setTemplate] = useState("Blog Post");
-  const [result, setResult] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-
-  const seoTitle = result
-    ? `${template} - AI Generated | Content Generator`
-    : "AI Content & Blog Generator | SEO Optimized Writing Tool";
-  const seoDescription = result
-    ? result.substring(0, 160).replace(/\n/g, " ")
-    : "Generate SEO-optimized blog posts, product descriptions, social media posts, and emails instantly with AI.";
-
-  const handleGenerate = async () => {
-    if (!prompt.trim()) return;
-
-    setLoading(true);
-    setError("");
-    setResult("");
-
-    // ✅ Use Render in production, localhost in dev
-    const API_BASE_URL =  import.meta.env.VITE_API_URL || "http://localhost:8000";
-
-    try {
-      const res = await fetch(`${API_BASE_URL}/api/generator/`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt, template }),
-      });
-
-      if (!res.ok) {
-        throw new Error(`Server error: ${res.status}`);
-      }
-
-      const data = await res.json();
-
-      if (data.content) {
-        if (Array.isArray(data.content.sections)) {
-          setResult(data.content.sections.map((sec) => sec.content).join("\n\n"));
-        } else if (typeof data.content === "string") {
-          setResult(data.content);
-        } else {
-          setResult(JSON.stringify(data.content, null, 2));
-        }
-      }
-    } catch (err) {
-      console.error("Error generating content:", err);
-      setError("Something went wrong. Please try again.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  return (
-    <>
-      {/* ✅ SEO HEAD TAGS */}
-      <Helmet>
-        <title>{seoTitle}</title>
-        <meta name="description" content={seoDescription} />
-        <meta property="og:title" content={seoTitle} />
-        <meta property="og:description" content={seoDescription} />
-        <meta property="og:type" content="website" />
-        <meta property="og:url" content="https://yourdomain.com/" />
-        <meta property="og:image" content="https://yourdomain.com/preview.png" />
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content={seoTitle} />
-        <meta name="twitter:description" content={seoDescription} />
-        <meta name="twitter:image" content="https://yourdomain.com/preview.png" />
-      </Helmet>
-
-      {/* Hero / Generator section */}
-      <section className="flex-1 px-4 py-16 text-center">
-        <h1 className="mx-auto max-w-2xl text-4xl font-bold text-slate-900 dark:text-slate-100">
-          Content & Blog Generator
-        </h1>
-        <p className="mx-auto mt-4 max-w-xl text-lg text-slate-600 dark:text-slate-300">
-          Choose a template, describe your idea, and let AI create content for
-          you.
-        </p>
-
-        <div className="mx-auto mt-8 max-w-2xl space-y-4">
-          <Card>
-            {/* Template select */}
-            <select
-              value={template}
-              onChange={(e) => setTemplate(e.target.value)}
-              className="mb-4 w-full rounded-lg border border-slate-300 p-2 text-sm dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
-            >
-              <option value="Blog Post">Blog Post</option>
-              <option value="Product Description">Product Description</option>
-              <option value="Social Media Post">Social Media Post</option>
-              <option value="Email">Email</option>
-              <option value="Report">Report</option>
-            </select>
-
-            {/* Prompt input */}
-            <textarea
-              rows={4}
-              className="w-full rounded-lg border border-slate-300 p-3 text-sm dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
-              placeholder="Enter your prompt..."
-              value={prompt}
-              onChange={(e) => setPrompt(e.target.value)}
-            />
-
-            {/* Generate button */}
-            <div className="mt-4 flex justify-end">
-              <Button
-                type="button"
-                onClick={handleGenerate}
-                isLoading={loading}
-              >
-                {loading ? "Generating..." : "Generate"}
-              </Button>
-            </div>
-          </Card>
-        </div>
-
-        {/* Error */}
-        {error && <p className="mt-4 text-red-600 dark:text-red-400">{error}</p>}
-
-        {/* Result */}
-        {result && (
-          <motion.div
-            className="mx-auto mt-8 max-w-2xl"
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3 }}
-          >
-            <Card title="Generated Content">
-              <div className="whitespace-pre-wrap text-slate-700 dark:text-slate-200">
-                {result}
-              </div>
-            </Card>
-          </motion.div>
-        )}
-      </section>
-
-      {/* Features */}
-      <Features />
-
-      {/* Testimonials */}
-      <Testimonials />
-
-      {/* Footer */}
-      <footer className="bg-white dark:bg-slate-900 py-10 text-center border-t border-slate-200 dark:border-slate-800">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="border-t border-gray-800 ">
-            <div className="flex flex-col md:flex-row justify-between items-center">
-              <p className="text-gray-400 text-sm">
-                &copy; 2025 WriteSwift. All rights reserved.
-              </p>
-              <div className="flex space-x-6 mt-4 md:mt-0">
-                <Link
-                  to="/privacy"
-                  className="text-gray-400 hover:text-white text-sm transition-colors"
-                >
-                  Privacy Policy
-                </Link>
-                <Link
-                  to="/terms"
-                  className="text-gray-400 hover:text-white text-sm transition-colors"
-                >
-                  Terms of Service
-                </Link>
-              </div>
-            </div>
-          </div>
-        </div>
-      </footer>
-    </>
-  );
-}
 
 export default function App() {
+  const { user } = useAuth(); // ✅ user comes from AuthProvider
+   //window.supabase = supabase;
   return (
     <HelmetProvider>
       <div className="min-h-screen flex flex-col bg-slate-50 dark:bg-slate-950">
-        <Navbar />
+        {/* ✅ Navbar can now show login/logout based on user */}
+        <Navbar user={user} />
+
         <Routes>
-          <Route path="/" element={<HomePage />} />
+          {/* ✅ HomePage always loads, we just pass user */}
+          <Route path="/" element={<HomePage user={user} />} />
+          <Route path="/" element={<HomePage user={user} />} />
+          <Route path="/twin" element={<TwinPage />} />
+
+          {/* Public routes */}
           <Route path="/pricing" element={<PricingPage />} />
           <Route path="/features" element={<FeaturesPage />} />
           <Route path="/privacy" element={<PrivacyPage />} />
           <Route path="/terms" element={<TermsPage />} />
+          <Route path="/videos" element={<VideoGeneratorPage />} />
+          <Route path="/account" element={<ProtectedRoute><AccountBillingPage /></ProtectedRoute>} />
+
+          {/* Auth routes */}
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/signup" element={<SignupPage />} />
         </Routes>
+      <ScrollToTopButton />
       </div>
     </HelmetProvider>
   );
