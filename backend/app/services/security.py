@@ -2,7 +2,6 @@ from dotenv import load_dotenv
 load_dotenv()
 
 import os
-import requests
 from fastapi import HTTPException, Depends, status
 from fastapi.security import OAuth2PasswordBearer
 
