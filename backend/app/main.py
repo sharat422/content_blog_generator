@@ -5,7 +5,6 @@ from dotenv import load_dotenv
 import os
 from fastapi.staticfiles import StaticFiles
 
-
 import os
 load_dotenv()
 
@@ -14,7 +13,8 @@ from app.routes import generator, templates, synth_twin
 
 
 app = FastAPI(title="Content & Blog Generator")
-
+if os.path.isdir("static"):
+    app.mount("/static", StaticFiles(directory="static"), name="static")
 
 origins = [
     "https://www.writeswift.ai",

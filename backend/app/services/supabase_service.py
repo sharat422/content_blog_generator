@@ -25,7 +25,7 @@ supabase: Client | None = None
 if SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY:
     try:
         supabase = create_client(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
-        print(f"[SUPABASE] Client initialized for {SUPABASE_URL}")
+        #print(f"[SUPABASE] Client initialized for {SUPABASE_URL}")
     except Exception as e:
         print(f"[SUPABASE] ERROR initializing Supabase client: {e}")
 else:
