@@ -35,7 +35,7 @@ app.add_middleware(
 )
 
 # static for videos
-app.mount("/static", StaticFiles(directory="static"), name="static")
+#app.mount("/static", StaticFiles(directory="static"), name="static")
 
 app.include_router(generator.router, prefix="/api/generator", tags=["generator"])
 app.include_router(templates.router, prefix="/api/templates", tags=["templates"])
