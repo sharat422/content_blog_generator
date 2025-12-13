@@ -7,7 +7,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   
-  console.log("LoginPage:", { user, loading });
+ // console.log("LoginPage:", { user, loading });
 
   if (loading) return <p>Loading...</p>; // ✅ prevent blank screen
 

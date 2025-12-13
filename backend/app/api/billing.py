@@ -26,12 +26,18 @@ STRIPE_WEBHOOK_SECRET = os.getenv("STRIPE_WEBHOOK_SECRET")
 DEFAULT_PRICE_ID_PRO = os.getenv("STRIPE_PRICE_ID_PRO")
 APP_BASE_URL = os.getenv("APP_BASE_URL", "http://localhost:3000")
 
-if STRIPE_SECRET_KEY:
-    stripe.api_key = STRIPE_SECRET_KEY
-    print("✅ Stripe initialized")
-else:
-    print("❌ STRIPE_SECRET_KEY missing! Stripe will not work.")
+#if STRIPE_SECRET_KEY:
+   # stripe.api_key = STRIPE_SECRET_KEY
+   # print("✅ Stripe initialized")
+#else:
+    #print("❌ STRIPE_SECRET_KEY missing! Stripe will not work.")
+if not STRIPE_SECRET_KEY:
+    raise RuntimeError("STRIPE_SECRET_KEY is missing")
 
+IS_LIVE = STRIPE_SECRET_KEY.startswith("sk_live_")
+
+if os.getenv("ENVIRONMENT") == "production" and not IS_LIVE:
+    raise RuntimeError("🚨 Test Stripe key used in PRODUCTION")
 
 class PaymentRequest(BaseModel):
     price_id: Optional[str] = None
@@ -58,16 +64,16 @@ async def create_checkout_session(
     email = user.get("email")
     user_id = user.get("id")
 
-    print("\n==== /checkout START ====")
-    print(f"User: {user_id} ({email})")
-    print(f"Price ID: {price_id}")
+    #print("\n==== /checkout START ====")
+    #print(f"User: {user_id} ({email})")
+    #print(f"Price ID: {price_id}")
 
     # Ensure customer exists
     try:
         result = stripe.Customer.list(email=email, limit=1)
         if result.data:
             customer = result.data[0]
-            print(f"➡️ Existing customer: {customer.id}")
+           # print(f"➡️ Existing customer: {customer.id}")
 
             stripe.Customer.modify(
                 customer.id,
@@ -78,7 +84,7 @@ async def create_checkout_session(
                 email=email,
                 metadata={"supabase_user_id": user_id, "email": email},
             )
-            print(f"➡️ Created new customer: {customer.id}")
+           # print(f"➡️ Created new customer: {customer.id}")
 
     except Exception as e:
         print("❌ Error preparing Stripe customer", e)
@@ -97,7 +103,7 @@ async def create_checkout_session(
                 "supabase_email": email,
             },
         )
-        print("➡️ Checkout session created:", session.id)
+       # print("➡️ Checkout session created:", session.id)
         return {"checkout_url": session.url}
 
     except Exception as e:
@@ -186,8 +192,8 @@ async def stripe_webhook(request: Request):
     event_type = event["type"]
     data = event["data"]["object"]
 
-    print("\n============ 🔔 STRIPE WEBHOOK ============")
-    print("Event:", event_type)
+    #print("\n============ 🔔 STRIPE WEBHOOK ============")
+    #print("Event:", event_type)
 
     # ------------------------------
     # Subscription Created / Updated
@@ -212,7 +218,7 @@ async def stripe_webhook(request: Request):
             subscription_status=status,
         )
 
-        print(f"➡️ Updated plan → {user_id} → {plan}")
+       # print(f"➡️ Updated plan → {user_id} → {plan}")
         return {"received": True}
 
     # ------------------------------

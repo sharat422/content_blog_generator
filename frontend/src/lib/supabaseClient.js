@@ -4,8 +4,8 @@ const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
 // Debug log (remove after testing!)
-console.log("VITE_SUPABASE_URL:", supabaseUrl);
-console.log("VITE_SUPABASE_ANON_KEY:", supabaseAnonKey ? "✅ loaded" : "❌ missing");
+//console.log("VITE_SUPABASE_URL:", supabaseUrl);
+//console.log("VITE_SUPABASE_ANON_KEY:", supabaseAnonKey ? "✅ loaded" : "❌ missing");
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 

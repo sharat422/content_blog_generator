@@ -124,7 +124,7 @@ def _fetch_memories(user_id: str) -> List[dict]:
         rows = resp.data or []
         return [_row_to_memory(r) for r in rows]
     except Exception as e:
-        print(f"[MEMORY] Error fetching memories from Supabase: {e}")
+        #print(f"[MEMORY] Error fetching memories from Supabase: {e}")
         return []
 
 
@@ -150,7 +150,7 @@ def _update_memory_fields(mem_id, fields: dict):
     try:
         supabase.table(TABLE_NAME).update(fields).eq("id", mem_id).execute()
     except Exception as e:
-        print(f"[MEMORY] Error updating memory {mem_id}: {e}")
+        print("[MEMORY] Error updating memory ")
 
 
 def _delete_memories_by_ids(ids: List):
@@ -159,7 +159,7 @@ def _delete_memories_by_ids(ids: List):
     try:
         supabase.table(TABLE_NAME).delete().in_("id", ids).execute()
     except Exception as e:
-        print(f"[MEMORY] Error deleting memories {ids}: {e}")
+        print("[MEMORY] Error deleting memories")
 
 
 # ------------------------------------------------------
@@ -189,7 +189,7 @@ def add_memory(
 
     stored = _insert_memory(mem)
     preview = content[:60].replace("\n", " ")
-    print(f"🧠 [MEMORY ADDED] {memory_type} ({importance:.2f}) | {preview}...")
+    #print(f"🧠 [MEMORY ADDED] {memory_type} ({importance:.2f}) | {preview}...")
     return stored or mem
 
 
@@ -227,7 +227,7 @@ def decay_memory(user_id: str):
             continue
 
     if ids_to_delete:
-        print(f"🧹 [MEMORY DECAY] Deleting {len(ids_to_delete)} memories for {user_id}")
+        #print(f"🧹 [MEMORY DECAY] Deleting {len(ids_to_delete)} memories for {user_id}")
         _delete_memories_by_ids(ids_to_delete)
 
 
@@ -284,7 +284,7 @@ def get_relevant_memories(
         m["uses"] = new_uses
         m["last_used_at"] = ensure_tz(now_iso)
 
-    print(f"📚 [MEMORY RETRIEVED] Returned {len(top)} memories for user {user_id}")
+    #print(f"📚 [MEMORY RETRIEVED] Returned {len(top)} memories for user {user_id}")
     return top
 
 

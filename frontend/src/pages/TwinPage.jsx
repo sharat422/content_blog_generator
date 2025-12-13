@@ -27,7 +27,7 @@ export default function TwinPage() {
   const API_BASE_URL =
     import.meta.env.VITE_API_URL || "http://localhost:8000";
 
-  console.log("TwinPage API_BASE_URL = ", API_BASE_URL);
+  //console.log("TwinPage API_BASE_URL = ", API_BASE_URL);
 
   // -----------------------------------------
   // LOAD PROFILE + MEMORIES
@@ -100,7 +100,7 @@ export default function TwinPage() {
       }
 
       const data = await res.json();
-      console.log("Twin response =", data);
+      //console.log("Twin response =", data);
 
       setResult(data.output || data.response ||data.content || "");
       fetchProfile();

@@ -10,8 +10,8 @@ export default function Navbar() {
 
   // ⭐ Pull credits from AuthContext
   const { user, signOut, credits } = useAuth();
-  console.log("Navbar user:", user);
-  console.log("useAuth():", useAuth());
+  //console.log("Navbar user:", user);
+  //console.log("useAuth():", useAuth());
 
 
   const navigate = useNavigate();

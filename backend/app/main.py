@@ -3,7 +3,6 @@ from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 # FIXED: use absolute imports only
 import os
-print("STRIPE_SECRET_KEY:", os.getenv("STRIPE_SECRET_KEY"))
 from fastapi.staticfiles import StaticFiles
 
 
@@ -15,7 +14,7 @@ from app.routes import generator, templates, synth_twin
 
 
 app = FastAPI(title="Content & Blog Generator")
-print("STRIPE_SECRET_KEY:", os.getenv("STRIPE_SECRET_KEY"))
+
 
 origins = [
     "https://www.writeswift.ai",
