@@ -58,6 +58,8 @@ async def create_checkout_session(
     """Create Stripe Checkout session for subscription."""
 
     price_id = payment.price_id or DEFAULT_PRICE_ID_PRO
+    #print(f"➡️ Using default price ID: {price_id}")
+    #print(f"{payment}")
     if not price_id:
         raise HTTPException(400, "Missing price_id")
 
@@ -95,7 +97,7 @@ async def create_checkout_session(
         session = stripe.checkout.Session.create(
             mode="subscription",
             customer=customer.id,
-            line_items=[{"price": price_id, "quantity": 1}],
+            line_items=[{"price": DEFAULT_PRICE_ID_PRO, "quantity": 1}],
             success_url=f"{APP_BASE_URL}/pricing?status=success",
             cancel_url=f"{APP_BASE_URL}/pricing?status=cancel",
             metadata={
