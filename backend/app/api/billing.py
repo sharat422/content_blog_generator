@@ -26,11 +26,11 @@ STRIPE_WEBHOOK_SECRET = os.getenv("STRIPE_WEBHOOK_SECRET")
 DEFAULT_PRICE_ID_PRO = os.getenv("STRIPE_PRICE_ID_PRO")
 APP_BASE_URL = os.getenv("APP_BASE_URL", "http://localhost:3000")
 
-#if STRIPE_SECRET_KEY:
-   # stripe.api_key = STRIPE_SECRET_KEY
-   # print("✅ Stripe initialized")
-#else:
-    #print("❌ STRIPE_SECRET_KEY missing! Stripe will not work.")
+if STRIPE_SECRET_KEY:
+    stripe.api_key = STRIPE_SECRET_KEY
+    print("✅ Stripe initialized")
+else:
+    print("❌ STRIPE_SECRET_KEY missing! Stripe will not work.")
 if not STRIPE_SECRET_KEY:
     raise RuntimeError("STRIPE_SECRET_KEY is missing")
 
