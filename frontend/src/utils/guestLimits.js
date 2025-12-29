@@ -7,7 +7,6 @@ function load() {
     return {};
   }
 }
-
 function save(v) {
   localStorage.setItem(KEY, JSON.stringify(v));
 }
