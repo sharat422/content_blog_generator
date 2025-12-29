@@ -4,6 +4,8 @@ import Button from "../components/ui/Button";
 import Card from "../components/ui/Card";
 import { useAuth } from "../context/AuthContext";
 import { supabase } from "../lib/supabaseClient";
+import { useNavigate } from "react-router-dom";
+
 
 const MODES = [
   { id: "reflect", label: "Reflect (Insights)" },
@@ -13,6 +15,7 @@ const MODES = [
 
 export default function TwinPage() {
   const { user } = useAuth();
+  const navigate = useNavigate();
 
   const [mode, setMode] = useState("reflect");
   const [prompt, setPrompt] = useState("");
@@ -54,6 +57,11 @@ export default function TwinPage() {
       }
 
       const data = await res.json();
+      // ✅ If free user, push to Pricing immediately
+      if (data?.is_pro === false) {
+      navigate("/pricing");
+      return;
+     }
       setProfile(data.profile || null);
       setMemories(data.memories || []);
 
@@ -92,6 +100,13 @@ export default function TwinPage() {
       });
 
       if (!res.ok) {
+        // If PRO required, redirect to pricing
+      if (res.status === 403) {
+      navigate("/pricing");
+      setLoading(false);
+      return;
+     }
+
         const text = await res.text();
         console.error("Bad generate response:", text);
         setError("Server error. Try again.");

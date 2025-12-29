@@ -19,6 +19,7 @@ import SignupPage from "./pages/SignupPage";
 import VideoGeneratorPage from "./pages/VideoGeneratorPage";
 import ProtectedRoute from "./components/ProtectedRoute";
 import AccountBillingPage from "./pages/AccountBillingPage";
+import UpdatePassword from "./pages/UpdatePassword"
 
 
 export default function App() {
@@ -34,7 +35,7 @@ export default function App() {
           {/* ✅ HomePage always loads, we just pass user */}
           <Route path="/" element={<HomePage user={user} />} />
           <Route path="/" element={<HomePage user={user} />} />
-          <Route path="/twin" element={<TwinPage />} />
+          <Route path="/twin" element={<ProtectedRoute><TwinPage /></ProtectedRoute>} />
 
           {/* Public routes */}
           <Route path="/pricing" element={<PricingPage />} />
@@ -43,7 +44,7 @@ export default function App() {
           <Route path="/terms" element={<TermsPage />} />
           <Route path="/videos" element={<VideoGeneratorPage />} />
           <Route path="/account" element={<ProtectedRoute><AccountBillingPage /></ProtectedRoute>} />
-
+          <Route path="/update-password" element={<UpdatePassword />} />
           {/* Auth routes */}
           <Route path="/login" element={<LoginPage />} />
           <Route path="/signup" element={<SignupPage />} />

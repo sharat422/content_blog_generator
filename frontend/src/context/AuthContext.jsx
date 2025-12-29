@@ -62,7 +62,6 @@ export function AuthProvider({ children }) {
             user_id: data.user.id,
             display_name: email.split("@")[0],
             favorite_topics: [],
-            memory: [],
           },
         ]);
 

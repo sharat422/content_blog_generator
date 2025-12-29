@@ -2,25 +2,25 @@ import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { Helmet } from "react-helmet-async";
 import { useNavigate } from "react-router-dom";
-import { Link } from "react-router-dom";
+//import { Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-
+import { remaining, consume } from "../utils/guestLimits";
 import Button from "../components/ui/Button";
 import Card from "../components/ui/Card";
 import Features from "../components/landing/Features";
 import Testimonials from "../components/landing/Testimonials";
 
-export default function HomePage({ user }) {
-  
+export default function HomePage() {
   const [prompt, setPrompt] = useState("");
   const [template, setTemplate] = useState("Blog Post");
   const [result, setResult] = useState("");
-  const [loading, setLoading] = useState(false);
+  //const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const navigate = useNavigate();
-  const { session } = useAuth();
+  const {user, loading, getToken } = useAuth();
 
-
+  console.log("HOME user:", user);
+  //console.log("HOME token exists:", !!session?.access_token);
   const seoTitle = result
     ? `${template} - AI Generated | Content Generator`
     : "AI Content & Blog Generator | SEO Optimized Writing Tool";
@@ -30,13 +30,39 @@ export default function HomePage({ user }) {
     : "Generate SEO-optimized blog posts, product descriptions, social media posts, and emails instantly with AI.";
 
   const handleGenerate = async () => {
+    if (loading) return;
     if (!prompt.trim()) return;
 
     // ✅ Redirect to login using React Router, no blank reload
-    if (!user) {
-      navigate("/login");
-      return;
-    }
+    // ✅ Guest limits BEFORE login:
+// Blog Post = 1 time, all other templates = 2 times
+if (!user) {
+  const isBlog = (template || "").toLowerCase().includes("blog");
+  const key = isBlog ? "guest_blog_generate" : "guest_other_generate";
+  const limit = isBlog ? 1 : 2;
+
+  if (remaining(key, limit) <= 0) {
+    navigate("/pricing"); // or "/signup" if you prefer
+    return;
+  }
+
+  // Consume the guest attempt
+  consume(key);
+
+  // IMPORTANT:
+  // Your backend /api/generator/ requires Authorization right now,
+  // so guests still can't actually generate without a guest endpoint.
+  // We'll send them to signup after consuming the trial click.
+  navigate("/signup");
+  return;
+}
+
+  const token = await getToken();
+if (!token) {
+  navigate("/login");
+  return;
+}
+
 
     setLoading(true);
     setError("");
@@ -48,7 +74,7 @@ export default function HomePage({ user }) {
     try {
       const res = await fetch(`${API_BASE_URL}/api/generator/`, {
         method: "POST",
-        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${session?.access_token}` },
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
         body: JSON.stringify({ prompt, template }),
       });
 

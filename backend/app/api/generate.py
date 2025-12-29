@@ -1,8 +1,7 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Header
 from sqlalchemy.orm import Session
 from app.db.session import get_db
 from app.services.llm_service import generate_content
-from app.services.supabase_service import get_user_profile, get_user_usage, increment_usage
 from app.config.plan_limits import get_limits
 from app.services.security import verify_supabase_token
 from app.services.supabase_service import get_user_usage, increment_usage, get_user_profile, get_user_credits, deduct_credits
@@ -13,9 +12,9 @@ from uuid import UUID
 router = APIRouter()
 
 class GenerateSchema(BaseModel):
-    user_id: UUID
     prompt: str
     type: str = "text"  # text, image, audio
+    action: str = "generate"  # optional: used for credit costs
 
 def check_and_deduct(user_id: str, action: str):
     credits = get_user_credits(user_id)
@@ -35,7 +34,7 @@ def check_and_deduct(user_id: str, action: str):
 def generate(body: GenerateSchema,
     user=Depends(verify_supabase_token), db: Session = Depends(get_db)):
     user_id = user["id"]
-        # -------------------------
+    # -------------------------
     # PLAN LIMIT CHECK
     # -------------------------
     profile = get_user_profile(user_id)
@@ -43,7 +42,6 @@ def generate(body: GenerateSchema,
 
     limits = get_limits(plan)
     max_free = limits["max_free_generations"]
-
     usage = get_user_usage(user_id)
 
     if usage >= max_free:
@@ -65,7 +63,7 @@ def generate(body: GenerateSchema,
         db=db, 
         user_id = user_id, 
         prompt = body.prompt,
-        output_type = body.type)
+        output_type = body.type,)
         return {"content": result, "remaining_free": max_free - (usage + 1 )}
         
     except Exception as e:

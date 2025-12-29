@@ -46,6 +46,38 @@ class PaymentRequest(BaseModel):
 class CheckoutResponse(BaseModel):
     checkout_url: str
 
+# Treat these subscription states as "already subscribed"
+ACTIVE_SUB_STATUSES = ("active", "trialing", "past_due")
+
+def get_user_plan_row(user_id: str):
+    """
+    Returns a row from user_plans or None
+    """
+    try:
+        resp = (
+            supabase.table("user_plans")
+            .select("plan, subscription_status, stripe_customer_id, stripe_subscription_id")
+            .eq("user_id", user_id)
+            .maybe_single()
+            .execute()
+        )
+        if resp is None:
+            print("⚠️ Supabase execute() returned None in get_user_plan_row")
+            return None
+
+        # supabase-py response normally has .data and .error
+        err = getattr(resp, "error", None)
+        if err:
+            print("⚠️ Supabase error in get_user_plan_row:", err)
+            return None
+
+        data = getattr(resp, "data", None)
+        return data or None
+
+    except Exception as e:
+        print("❌ Exception in get_user_plan_row:", repr(e))
+        return None
+
 
 # ------------------------------------------------------------
 # Checkout Session Creation
@@ -65,6 +97,21 @@ async def create_checkout_session(
 
     email = user.get("email")
     user_id = user.get("id")
+   
+    # ✅ If already subscribed, do NOT send them to checkout again.
+    row = get_user_plan_row(user_id)
+    if row and row.get("plan") == "pro" and row.get("subscription_status") in ACTIVE_SUB_STATUSES:
+        customer_id = row.get("stripe_customer_id")
+        if customer_id:
+            portal = stripe.billing_portal.Session.create(
+                customer=customer_id,
+                return_url=f"{APP_BASE_URL}/pricing",
+           )
+           # return checkout_url so frontend can redirect as usual
+            return {"checkout_url": portal.url}
+
+    # If somehow missing customer id, block duplicate subscription
+        raise HTTPException(409, "Already subscribed")
 
     #print("\n==== /checkout START ====")
     #print(f"User: {user_id} ({email})")
@@ -97,7 +144,7 @@ async def create_checkout_session(
         session = stripe.checkout.Session.create(
             mode="subscription",
             customer=customer.id,
-            line_items=[{"price": DEFAULT_PRICE_ID_PRO, "quantity": 1}],
+            line_items=[{"price": price_id, "quantity": 1}],
             success_url=f"{APP_BASE_URL}/pricing?status=success",
             cancel_url=f"{APP_BASE_URL}/pricing?status=cancel",
             metadata={
@@ -111,8 +158,16 @@ async def create_checkout_session(
     except Exception as e:
         print("❌ Checkout error: ", e)
         raise HTTPException(500, "Stripe checkout error")
-
-
+# ------------------------------------------------------------
+# Billing Status (Frontend uses this to hide/disable Pro)
+# ------------------------------------------------------------
+@router.get("/status")
+async def billing_status(user: Dict[str, Any] = Depends(verify_supabase_token)):
+    user_id = user.get("id")
+    row = get_user_plan_row(user_id)
+    if not row :
+       return {"plan": "free", "subscription_status": None }
+    return row
 # ------------------------------------------------------------
 # Billing Portal
 # ------------------------------------------------------------
