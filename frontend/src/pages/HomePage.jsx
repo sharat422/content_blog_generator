@@ -14,10 +14,10 @@ export default function HomePage() {
   const [prompt, setPrompt] = useState("");
   const [template, setTemplate] = useState("Blog Post");
   const [result, setResult] = useState("");
-  //const [loading, setLoading] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState("");
   const navigate = useNavigate();
-  const {user, loading, getToken } = useAuth();
+  const { user, loading: authLoading, getToken } = useAuth();
 
   console.log("HOME user:", user);
   //console.log("HOME token exists:", !!session?.access_token);
@@ -30,41 +30,41 @@ export default function HomePage() {
     : "Generate SEO-optimized blog posts, product descriptions, social media posts, and emails instantly with AI.";
 
   const handleGenerate = async () => {
-    if (loading) return;
+    if (authLoading || isGenerating) return;
     if (!prompt.trim()) return;
 
     // ✅ Redirect to login using React Router, no blank reload
     // ✅ Guest limits BEFORE login:
-// Blog Post = 1 time, all other templates = 2 times
-if (!user) {
-  const isBlog = (template || "").toLowerCase().includes("blog");
-  const key = isBlog ? "guest_blog_generate" : "guest_other_generate";
-  const limit = isBlog ? 1 : 2;
+    // Blog Post = 1 time, all other templates = 2 times
+    if (!user) {
+      const isBlog = (template || "").toLowerCase().includes("blog");
+      const key = isBlog ? "guest_blog_generate" : "guest_other_generate";
+      const limit = isBlog ? 1 : 2;
 
-  if (remaining(key, limit) <= 0) {
-    navigate("/pricing"); // or "/signup" if you prefer
-    return;
-  }
+      if (remaining(key, limit) <= 0) {
+        navigate("/pricing"); // or "/signup" if you prefer
+        return;
+      }
 
-  // Consume the guest attempt
-  consume(key);
+      // Consume the guest attempt
+      consume(key);
 
-  // IMPORTANT:
-  // Your backend /api/generator/ requires Authorization right now,
-  // so guests still can't actually generate without a guest endpoint.
-  // We'll send them to signup after consuming the trial click.
-  navigate("/signup");
-  return;
-}
+      // IMPORTANT:
+      // Your backend /api/generator/ requires Authorization right now,
+      // so guests still can't actually generate without a guest endpoint.
+      // We'll send them to signup after consuming the trial click.
+      navigate("/signup");
+      return;
+    }
 
-  const token = await getToken();
-if (!token) {
-  navigate("/login");
-  return;
-}
+    const token = await getToken();
+    if (!token) {
+      navigate("/login");
+      return;
+    }
 
 
-    setLoading(true);
+    setIsGenerating(true);
     setError("");
     setResult("");
 
@@ -97,7 +97,7 @@ if (!token) {
       console.error("Error generating content:", err);
       setError("Something went wrong. Please try again.");
     } finally {
-      setLoading(false);
+      setIsGenerating(false);
     }
   };
 
@@ -108,7 +108,7 @@ if (!token) {
         <title>{seoTitle}</title>
         <meta name="description" content={seoDescription} />
       </Helmet>
-{/*<section className="py-16 bg-slate-950 border-t border-slate-800">
+      {/*<section className="py-16 bg-slate-950 border-t border-slate-800">
   <div className="max-w-5xl mx-auto px-4 text-center">
     <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
       Turn ideas into AI videos in seconds
@@ -160,9 +160,9 @@ if (!token) {
               <Button
                 type="button"
                 onClick={handleGenerate}
-                isLoading={loading}
+                isLoading={isGenerating}
               >
-                {loading ? "Generating..." : "Generate"}
+                {isGenerating ? "Generating..." : "Generate"}
               </Button>
             </div>
           </Card>
