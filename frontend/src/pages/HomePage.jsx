@@ -19,7 +19,7 @@ export default function HomePage() {
   const navigate = useNavigate();
   const { user, loading: authLoading, getToken } = useAuth();
 
-  console.log("HOME user:", user);
+  //console.log("HOME user:", user);
   //console.log("HOME token exists:", !!session?.access_token);
   const seoTitle = result
     ? `${template} - AI Generated | Content Generator`
