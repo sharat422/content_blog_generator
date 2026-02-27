@@ -1,5 +1,10 @@
-﻿from pydantic_settings import BaseSettings
+# app/config/__init__.py
+# Re-exports settings and cost utilities for backward compatibility.
+# Other modules can use: from app.config import settings
+
+from pydantic_settings import BaseSettings
 from pydantic import ConfigDict
+
 
 class Settings(BaseSettings):
     model_config = ConfigDict(extra="allow", env_file=".env", env_file_encoding="utf-8")
@@ -12,7 +17,6 @@ class Settings(BaseSettings):
     XAI_API_KEY: str | None = None
     XAI_API_BASE: str | None = None
 
-    # 🔥 Add these bridge properties so llm.py works:
     @property
     def model_name(self) -> str | None:
         return self.MODEL_NAME
@@ -23,7 +27,6 @@ class Settings(BaseSettings):
 
     @property
     def model_base_url(self) -> str | None:
-        # use a BASE_URL env if present, otherwise VITE_API_URL
         return getattr(self, "BASE_URL", None) or self.VITE_API_URL
 
 
@@ -34,10 +37,9 @@ CREDIT_COSTS = {
     "image": 20,
     "video_script": 8,
     "outline": 3,
-    "video_render": 100
+    "video_render": 100,
 }
+
 
 def get_cost(action_type: str):
     return CREDIT_COSTS.get(action_type, 5)
-
-

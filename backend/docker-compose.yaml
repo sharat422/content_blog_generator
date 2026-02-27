@@ -4,6 +4,9 @@ FROM python:3.11-slim
 # Set workdir
 WORKDIR /app
 
+# System deps (ffmpeg for video)
+RUN apt-get update && apt-get install -y ffmpeg && rm -rf /var/lib/apt/lists/*
+
 # Install system deps (for psycopg2 / Postgres drivers)
 RUN apt-get update && apt-get install -y \
     build-essential \
@@ -13,6 +16,8 @@ RUN apt-get update && apt-get install -y \
 # Install Python deps
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
+
+RUN apt-get update && apt-get install -y ffmpeg && rm -rf /var/lib/apt/lists/*
 
 # Copy app code
 COPY . .

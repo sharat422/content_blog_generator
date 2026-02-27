@@ -1,4 +1,4 @@
-# app/services/image_service.py
+﻿# app/services/image_service.py
 
 import os
 from typing import Optional
@@ -96,7 +96,7 @@ def generate_ai_image_and_upload(
         return public_url
 
     except Exception as e:
-        print(f"❌ [AI SERVICE] Image generation/upload failed: {e}")
+        print(f"[ERROR] [AI SERVICE] Image generation/upload failed: {e}")
         # Clean up local file on error
         if local_path.exists():
              os.remove(local_path)

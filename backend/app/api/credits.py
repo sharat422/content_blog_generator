@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+﻿from fastapi import APIRouter, Depends
 from app.services.security import verify_supabase_token
 from app.services.supabase_service import get_user_credits
 

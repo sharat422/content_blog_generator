@@ -1,4 +1,4 @@
-PLAN_LIMITS = {
+﻿PLAN_LIMITS = {
     "free": {
         "generations": 10,
         "words": 5000,  # optional

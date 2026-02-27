@@ -1,4 +1,4 @@
-# app/synthetic_engine/synth_core.py
+﻿# app/synthetic_engine/synth_core.py
 import json
 from typing import Dict, Optional, List
 from datetime import datetime
@@ -20,7 +20,8 @@ class TwinProfile(BaseModel):
     tone: Optional[str] = "Friendly"
     creativity: Optional[float] = 0.7
     favorite_topics: Optional[List[str]] = None
-    memories: Optional[List[str]] = None
+    memories: Optional[list] = None
+    last_updated: Optional[datetime] = None
     
 class SynthCore:
     """
@@ -221,6 +222,45 @@ TWIN: {twin_msg}
         if label == "other":
             return "ltm"
         return label
+    # ---------------------------------------------------------
+    # Personality evolution based on memory
+    # ---------------------------------------------------------
+    async def _evolve_personality(self, user_id: str):
+        """
+        Adjusts tone, creativity, and favorite_topics gradually based on long-term memory.
+        """
+        important = get_important_memory(user_id, threshold=0.7, limit=80)
+
+        if not important:
+            return
+
+        text_blob = " ".join(m.get("content", "").lower() for m in important)
+
+        # If user talks a lot about business, money, systems:
+        business_keywords = ["business", "clients", "sales", "revenue", "saas", "dispatch", "freight"]
+        if any(k in text_blob for k in business_keywords):
+            if "business" not in self.profile.favorite_topics:
+                self.profile.favorite_topics.append("business")
+            if "systems" not in self.profile.favorite_topics:
+                self.profile.favorite_topics.append("systems")
+
+        # If user expresses stress, burnout, overwhelm → more supportive tone
+        stress_keywords = ["stressed", "overwhelmed", "burnout", "tired", "anxious"]
+        if any(k in text_blob for k in stress_keywords):
+            self.profile.tone = "supportive"
+
+        # If many creative tasks → boost creativity slightly
+        creative_keywords = ["write", "script", "idea", "content", "video", "design"]
+        if any(k in text_blob for k in creative_keywords):
+            self.profile.creativity = min(1.0, self.profile.creativity + 0.05)
+
+        # If lots of planning / goals → slightly reduce creativity for more structure
+        goal_keywords = ["goal", "plan", "roadmap", "milestone", "deadline"]
+        if any(k in text_blob for k in goal_keywords):
+            self.profile.creativity = max(0.3, self.profile.creativity - 0.05)
+
+        self.profile.last_updated = datetime.utcnow()
+
     # ---------------------------------
 # TwinCore — personality engine
 # ---------------------------------
@@ -275,42 +315,3 @@ class TwinCore(SynthCore):
             user_prompt=messages[1]["content"],
             creativity=profile.creativity,
  )
-
-    # ---------------------------------------------------------
-    # Personality evolution based on memory
-    # ---------------------------------------------------------
-    async def _evolve_personality(self, user_id: str):
-        """
-        Adjusts tone, creativity, and favorite_topics gradually based on long-term memory.
-        """
-        important = get_important_memory(user_id, threshold=0.7, limit=80)
-
-        if not important:
-            return
-
-        text_blob = " ".join(m.get("content", "").lower() for m in important)
-
-        # If user talks a lot about business, money, systems:
-        business_keywords = ["business", "clients", "sales", "revenue", "saas", "dispatch", "freight"]
-        if any(k in text_blob for k in business_keywords):
-            if "business" not in self.profile.favorite_topics:
-                self.profile.favorite_topics.append("business")
-            if "systems" not in self.profile.favorite_topics:
-                self.profile.favorite_topics.append("systems")
-
-        # If user expresses stress, burnout, overwhelm → more supportive tone
-        stress_keywords = ["stressed", "overwhelmed", "burnout", "tired", "anxious"]
-        if any(k in text_blob for k in stress_keywords):
-            self.profile.tone = "supportive"
-
-        # If many creative tasks → boost creativity slightly
-        creative_keywords = ["write", "script", "idea", "content", "video", "design"]
-        if any(k in text_blob for k in creative_keywords):
-            self.profile.creativity = min(1.0, self.profile.creativity + 0.05)
-
-        # If lots of planning / goals → slightly reduce creativity for more structure
-        goal_keywords = ["goal", "plan", "roadmap", "milestone", "deadline"]
-        if any(k in text_blob for k in goal_keywords):
-            self.profile.creativity = max(0.3, self.profile.creativity - 0.05)
-
-        self.profile.last_updated = datetime.utcnow()

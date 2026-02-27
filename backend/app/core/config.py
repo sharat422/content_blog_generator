@@ -1,4 +1,4 @@
-import sys
+﻿import sys
 from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):

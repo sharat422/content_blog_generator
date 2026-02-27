@@ -1,16 +1,15 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
-# FIXED: use absolute imports only
+
 import os
 from fastapi.staticfiles import StaticFiles
 
 import os
 load_dotenv()
 
-from app.api import twin, auth, youtube_video, video, billing, credits,billing_plan
-from app.routes import generator, templates, synth_twin
-
+from app.api import twin, auth, youtube_video, video, billing, credits, billing_plan, ecommerce
+from app.routes import generator, templates
 
 app = FastAPI(title="Content & Blog Generator")
 if os.path.isdir("static"):
@@ -39,13 +38,13 @@ app.add_middleware(
 
 app.include_router(generator.router, prefix="/api/generator", tags=["generator"])
 app.include_router(templates.router, prefix="/api/templates", tags=["templates"])
-app.include_router(synth_twin.router)
 app.include_router(video.router)
 app.include_router(youtube_video.router)
 app.include_router(auth.router)
 app.include_router(billing.router)
 app.include_router(credits.router)
 app.include_router(billing_plan.router)
+app.include_router(ecommerce.router)
 app.include_router(twin.router, prefix="/api/twin", tags=["Twin"])
 
 @app.get("/")

@@ -17,6 +17,7 @@ import PrivacyPage from "./pages/PrivacyPolicy";
 import LoginPage from "./pages/LoginPage";
 import SignupPage from "./pages/SignupPage";
 import VideoGeneratorPage from "./pages/VideoGeneratorPage";
+import EcommercePage from "./pages/EcommercePage";
 import ProtectedRoute from "./components/ProtectedRoute";
 import AccountBillingPage from "./pages/AccountBillingPage";
 import UpdatePassword from "./pages/UpdatePassword"
@@ -24,7 +25,7 @@ import UpdatePassword from "./pages/UpdatePassword"
 
 export default function App() {
   const { user } = useAuth(); // ✅ user comes from AuthProvider
-   //window.supabase = supabase;
+  //window.supabase = supabase;
   return (
     <HelmetProvider>
       <div className="min-h-screen flex flex-col bg-slate-50 dark:bg-slate-950">
@@ -43,13 +44,14 @@ export default function App() {
           <Route path="/privacy" element={<PrivacyPage />} />
           <Route path="/terms" element={<TermsPage />} />
           <Route path="/videos" element={<VideoGeneratorPage />} />
+          <Route path="/ecommerce" element={<EcommercePage />} />
           <Route path="/account" element={<ProtectedRoute><AccountBillingPage /></ProtectedRoute>} />
           <Route path="/update-password" element={<UpdatePassword />} />
           {/* Auth routes */}
           <Route path="/login" element={<LoginPage />} />
           <Route path="/signup" element={<SignupPage />} />
         </Routes>
-      <ScrollToTopButton />
+        <ScrollToTopButton />
       </div>
     </HelmetProvider>
   );

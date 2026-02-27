@@ -1,4 +1,4 @@
-# app/services/xai_image_service.py
+﻿# app/services/xai_image_service.py
 
 from pathlib import Path
 from PIL import Image, ImageDraw

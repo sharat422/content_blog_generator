@@ -1,4 +1,4 @@
-# app/api/video.py
+﻿# app/api/video.py
 
 from typing import List
 
@@ -7,7 +7,7 @@ from pydantic import BaseModel
 
 from app.services.video_planner import generate_video_plan, SceneModel
 from app.services.video_renderer import render_video_to_supabase
-# 🌟 UPDATED: Ensure get_current_user is imported for authentication
+# [*] UPDATED: Ensure get_current_user is imported for authentication
 from app.services.security import get_current_user 
 from app.services.supabase_service import deduct_credits # <-- NEW
 from app.config import get_cost # <-- NEW (Uses cost for "video_script" which is 8)
@@ -23,13 +23,13 @@ class PlanRequest(BaseModel):
 class RenderRequest(BaseModel):
     scenes: List[SceneModel]
     with_voiceover: bool = False
-    with_music: bool = True  # 🌟 NEW: Added with_music control
+    with_music: bool = True  # [*] NEW: Added with_music control
 
 
 @router.post("/plan")
 def plan_video(
     req: PlanRequest,
-    user=Depends(get_current_user) # 🌟 NEW: Requires authentication for credit check
+    user=Depends(get_current_user) # [*] NEW: Requires authentication for credit check
 ):
     """
     Step 1: Generate scenes from topic for Shorts/Reels.
@@ -54,7 +54,7 @@ def plan_video(
 @router.post("/render")
 def render_video(
     req: RenderRequest,
-    user=Depends(get_current_user) # 🌟 NEW: Requires authentication for credit deduction
+    user=Depends(get_current_user) # [*] NEW: Requires authentication for credit deduction
 ):
     """
     Step 2: Render final video from scenes using the hybrid renderer.
@@ -63,10 +63,10 @@ def render_video(
 
     try:
         video_url = render_video_to_supabase(
-            user_id=user_id, # 🌟 PASS user_id
+            user_id=user_id, # [*] PASS user_id
             scenes=req.scenes,
             with_voiceover=req.with_voiceover,
-            with_music=req.with_music, # 🌟 PASS with_music
+            with_music=req.with_music, # [*] PASS with_music
         )
         return {"url": video_url}
     except Exception as e:

@@ -1,4 +1,4 @@
-# app/services/supabase_service.py
+﻿# app/services/supabase_service.py
 
 import os
 import requests
@@ -45,7 +45,7 @@ def load_memories(user_id: str):
     res = requests.get(url, headers=HEADERS)
 
     if res.status_code != 200:
-        print("❌ Error loading memories:", res.text)
+        print("[ERROR] Error loading memories:", res.text)
         return []
 
     # Ensure timestamps are parsed safely
@@ -69,7 +69,7 @@ def save_memory(user_id: str, memory_text: str, memory_type: str):
     res = requests.post(url, headers=HEADERS, json=payload)
 
     if res.status_code not in (200, 201):
-        print("❌ Error saving memory:", res.text)
+        print("[ERROR] Error saving memory:", res.text)
 # -------------------------------------------------
 # EXISTING: plan + profile helpers
 # -------------------------------------------------
@@ -103,7 +103,18 @@ def set_user_plan(
         print(f"[SUPABASE] ERROR upserting user_plans: {e}")
 
 
-def get_user_profile(user_id: str, bio: str, tone: str, goals: str):
+def fetch_user_profile(user_id: str):
+    """Fetch user profile from Supabase."""
+    if supabase is None:
+        return None
+    try:
+        resp = supabase.table("user_profiles").select("*").eq("user_id", user_id).maybe_single().execute()
+        return resp.data
+    except Exception as e:
+        print(f"[SUPABASE] ERROR fetching user_profile: {e}")
+        return None
+
+def upsert_user_profile(user_id: str, bio: str, tone: str, goals: str):
     if supabase is None:
         return None
     profile = {
@@ -215,7 +226,7 @@ def get_user_credits(user_id: str) -> dict | None:
 # BILLING: get user plan
 # ----------------------------------------------------
 def get_user_plan(user_id: str):
-    url = f"{SUPABASE_URL}/rest/v1/billing_plans?user_id=eq.{user_id}&select=*"
+    url = f"{SUPABASE_URL}/rest/v1/user_plans?user_id=eq.{user_id}&select=*"
     res = requests.get(url, headers=HEADERS)
 
     if res.status_code != 200:

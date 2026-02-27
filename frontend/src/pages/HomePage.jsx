@@ -1,8 +1,8 @@
 import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { Helmet } from "react-helmet-async";
-import { useNavigate } from "react-router-dom";
-//import { Link } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
+import { ShoppingCart, ArrowRight } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { remaining, consume } from "../utils/guestLimits";
 import Button from "../components/ui/Button";
@@ -141,11 +141,21 @@ export default function HomePage() {
               onChange={(e) => setTemplate(e.target.value)}
               className="mb-4 w-full rounded-lg border border-slate-300 p-2 text-sm dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
             >
-              <option value="Blog Post">Blog Post</option>
-              <option value="Product Description">Product Description</option>
-              <option value="Social Media Post">Social Media Post</option>
-              <option value="Email">Email</option>
-              <option value="Report">Report</option>
+              <optgroup label="General Content">
+                <option value="Blog Post">Blog Post</option>
+                <option value="Product Description">Product Description</option>
+                <option value="Social Media Post">Social Media Post</option>
+                <option value="Email">Email</option>
+                <option value="Report">Report</option>
+              </optgroup>
+              <optgroup label="🛒 Ecommerce SEO">
+                <option value="Ecommerce Product Description">Ecommerce Product Description</option>
+                <option value="Ecommerce Blog Post">Ecommerce Blog Post</option>
+                <option value="Marketplace Listing">Marketplace Listing (Amazon/eBay)</option>
+                <option value="Category Page">Category Page</option>
+                <option value="Product FAQ">Product FAQ</option>
+                <option value="Meta Tags">Meta Tags Generator</option>
+              </optgroup>
             </select>
 
             <textarea
@@ -183,9 +193,41 @@ export default function HomePage() {
               <div className="whitespace-pre-wrap text-slate-700 dark:text-slate-200">
                 {result}
               </div>
+              <div className="mt-4 pt-4 border-t border-slate-200 dark:border-slate-700 flex justify-end">
+                <button
+                  onClick={() => navigator.clipboard.writeText(result)}
+                  className="text-xs text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 flex items-center gap-1 transition"
+                >
+                  📋 Copy to clipboard
+                </button>
+              </div>
             </Card>
           </motion.div>
         )}
+      </section>
+
+      {/* ── Ecommerce Feature Banner ── */}
+      <section className="py-14 bg-gradient-to-br from-indigo-600 to-indigo-800 dark:from-indigo-800 dark:to-indigo-950">
+        <div className="max-w-4xl mx-auto px-4 flex flex-col md:flex-row items-center justify-between gap-6">
+          <div className="text-center md:text-left">
+            <div className="flex items-center gap-2 text-indigo-200 text-sm font-semibold mb-2">
+              <ShoppingCart size={16} />
+              Built for Ecommerce Sellers
+            </div>
+            <h2 className="text-2xl md:text-3xl font-black text-white">
+              SEO-Optimized Content for Your Store
+            </h2>
+            <p className="mt-2 text-indigo-200 text-sm max-w-lg">
+              Amazon listings, Shopify product pages, category descriptions, FAQs, and meta tags — all structured for search engine rankings.
+            </p>
+          </div>
+          <Link
+            to="/ecommerce"
+            className="shrink-0 flex items-center gap-2 px-6 py-3 rounded-xl bg-white text-indigo-700 font-bold text-sm hover:bg-indigo-50 transition shadow-lg"
+          >
+            Open Ecommerce Generator <ArrowRight size={16} />
+          </Link>
+        </div>
       </section>
 
       {/* Features & Testimonials */}

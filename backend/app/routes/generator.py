@@ -1,4 +1,4 @@
-from app.db.models import User
+﻿from app.db.models import User
 from fastapi import APIRouter, Depends, HTTPException
 from app.routes.schemas import GenerateSchema
 from app.services.llm_service import generate_llm_content
@@ -26,5 +26,5 @@ async def generate_content(request: GenerateSchema):
         content = await generate_llm_content(request.prompt, request.template)
         return {"content": content}
     except Exception as e:
-        print("❌ Error generating content:", e)
+        print("[ERROR] Error generating content:", e)
         raise HTTPException(status_code=500, detail="LLM generation failed")

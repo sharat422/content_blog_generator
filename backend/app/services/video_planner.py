@@ -1,4 +1,4 @@
-# app/services/video_planner.py - UPDATED
+﻿# app/services/video_planner.py - UPDATED
 
 import json
 from pydantic import BaseModel

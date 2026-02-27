@@ -1,4 +1,4 @@
-# app/services/video_renderer.py
+﻿# app/services/video_renderer.py
 
 import os
 import subprocess
@@ -8,7 +8,7 @@ from typing import List, Optional
 
 from PIL import Image, ImageDraw, ImageFont
 
-# 🌟 FIX: Use the newly created image_service and remove the redundant IMAGE_COST import
+# [*] FIX: Use the newly created image_service and remove the redundant IMAGE_COST import
 from app.services.image_service import generate_ai_image_and_upload 
 from app.services.supabase_service import deduct_credits
 from app.config import CREDIT_COSTS
@@ -47,7 +47,7 @@ def _download_image(url: str, output_path: Path) -> Path:
             f.write(chunk)
     return output_path
 
-# 🌟 MODIFIED: _create_frame_image to handle background_image_path
+# [*] MODIFIED: _create_frame_image to handle background_image_path
 def _create_frame_image(
     text: str,
     output_path: Path,
@@ -123,23 +123,23 @@ def _generate_scene_assets(user_id: str, scene: SceneModel) -> Path | None:
 
     except ValueError as e:
         # Not enough credits
-        print(f"⚠️ [RENDERER] Asset generation skipped: {e}")
+        print(f"[WARN] [RENDERER] Asset generation skipped: {e}")
         # Re-raise the value error to be caught by the API endpoint for 402 status
         raise
     except Exception as e:
-        print(f"❌ [RENDERER] Image generation failed for scene {scene.id}: {e}")
+        print(f"[ERROR] [RENDERER] Image generation failed for scene {scene.id}: {e}")
         return None
         
         
 # ------------------------------------------------------------------
 # MAIN RENDERER FUNCTION (MODIFIED)
 # ------------------------------------------------------------------
-# 🌟 MODIFIED SIGNATURE to accept user_id and with_music
+# [*] MODIFIED SIGNATURE to accept user_id and with_music
 def render_video_to_supabase(
     user_id: str,
     scenes: List[SceneModel],
     with_voiceover: bool = False,
-    with_music: bool = True, # 🌟 NEW: Control for music
+    with_music: bool = True, # [*] NEW: Control for music
 ) -> str:
     """
     Renders the video from scenes, handles asset generation, and uploads to Supabase.
@@ -158,7 +158,7 @@ def render_video_to_supabase(
         segment_path = SEGMENTS_DIR / f"segment_{scene.id}.mp4"
         audio_path = all_audio_paths[i]
         
-        # 🌟 NEW: Generate the AI Image asset (and deducts credits)
+        # [*] NEW: Generate the AI Image asset (and deducts credits)
         ai_image_path = _generate_scene_assets(user_id, scene) 
 
         # 3) PIL: Create a still frame image with that background

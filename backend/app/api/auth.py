@@ -1,4 +1,4 @@
-# app/api/auth.py
+﻿# app/api/auth.py
 
 from fastapi import APIRouter, Depends
 from app.services.security import get_current_user

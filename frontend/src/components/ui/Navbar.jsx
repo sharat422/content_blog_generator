@@ -6,7 +6,7 @@ import { useAuth } from "../../context/AuthContext";
 export default function Navbar() {
   const [open, setOpen] = useState(false);
   const [theme, setTheme] = useState("light");
- 
+
 
   // ⭐ Pull credits from AuthContext
   const { user, signOut, credits } = useAuth();
@@ -34,22 +34,23 @@ export default function Navbar() {
   };
 
   const handleLogout = async () => {
-  try {
-    await signOut();
-    setOpen(false);
+    try {
+      await signOut();
+      setOpen(false);
 
-    setTimeout(() => {
-      navigate("/login");
-      window.location.reload();
-    }, 200);
-  } catch (err) {
-    console.error("Logout error:", err);
-  }
-};
+      setTimeout(() => {
+        navigate("/login");
+        window.location.reload();
+      }, 200);
+    } catch (err) {
+      console.error("Logout error:", err);
+    }
+  };
 
 
   const navLinks = [
     { name: "Home", to: "/" },
+    { name: "Ecommerce", to: "/ecommerce" },
     { name: "Twin", to: "/twin" },
     { name: "Pricing", to: "/pricing" },
     { name: "Terms", to: "/terms" },
@@ -59,7 +60,7 @@ export default function Navbar() {
   return (
     <nav className="fixed top-0 left-0 w-full bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 z-50 transition-all duration-300">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-between items-center h-16">
-        
+
         {/* Logo */}
         <Link to="/" className="flex items-center space-x-2">
           <div className="relative">
@@ -84,7 +85,7 @@ export default function Navbar() {
           ))}
 
           {/* ⭐ CREDITS BADGE — Show only if logged in */}
-            {/*{user && (
+          {/*{user && (
             <div className="px-4 py-1 rounded-full bg-indigo-100 dark:bg-indigo-800 text-indigo-700 dark:text-white font-semibold text-sm shadow">
               ⚡ Credits: {credits ?? 0}
             </div>
@@ -121,16 +122,16 @@ export default function Navbar() {
             </>
           ) : (
             <button
-  onClick={() => {
-    console.log("Logout button clicked!");
-    handleLogout();
-  }}
-  className="px-4 py-2 rounded-lg bg-red-500 text-white font-semibold hover:bg-red-600 transition"
->
-  Logout
-</button>
+              onClick={() => {
+                console.log("Logout button clicked!");
+                handleLogout();
+              }}
+              className="px-4 py-2 rounded-lg bg-red-500 text-white font-semibold hover:bg-red-600 transition"
+            >
+              Logout
+            </button>
 
-            
+
           )}
         </div>
 

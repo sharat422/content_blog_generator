@@ -1,4 +1,4 @@
-def format_youtube_script(script_json: str) -> str:
+﻿def format_youtube_script(script_json: str) -> str:
     """
     Converts your LLM JSON string into a clean, readable,
     YouTube-ready script with emojis & section headers.

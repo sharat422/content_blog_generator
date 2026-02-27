@@ -1,13 +1,15 @@
-from fastapi import APIRouter, Depends, HTTPException, Header
+﻿from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from app.db.session import get_db
-from app.services.llm_service import generate_content
 from app.config.plan_limits import get_limits
 from app.services.security import verify_supabase_token
-from app.services.supabase_service import get_user_usage, increment_usage, get_user_profile, get_user_credits, deduct_credits
+from app.synthetic_engine.synth_core import TwinCore, TwinProfile
+from app.services.llm_service import llm_client
+from app.services.supabase_service import get_usage, supabase, increment_usage, get_user_credits, deduct_credits
 from app.config.credit_costs import get_cost
 from pydantic import BaseModel
-from uuid import UUID
+
+
 
 router = APIRouter()
 
@@ -31,40 +33,50 @@ def check_and_deduct(user_id: str, action: str):
     return True    
 
 @router.post("/")
-def generate(body: GenerateSchema,
+async def generate(body: GenerateSchema,
     user=Depends(verify_supabase_token), db: Session = Depends(get_db)):
     user_id = user["id"]
-    # -------------------------
-    # PLAN LIMIT CHECK
-    # -------------------------
-    profile = get_user_profile(user_id)
-    plan = profile.get("plan", "free")
 
-    limits = get_limits(plan)
-    max_free = limits["max_free_generations"]
-    usage = get_user_usage(user_id)
+    # 1. Fetch user profile from Supabase
+    profile_resp = supabase.table("twin_profiles").select("*").eq("user_id", user_id).maybe_single().execute()
+    # Use existing profile or a default starting point
+    profile_data = profile_resp.data if profile_resp.data else {
+        "user_id": user_id,
+        "tone": "Friendly",
+        "creativity": 0.7,
+        "favorite_topics": []
+    }
 
-    if usage >= max_free:
-        raise HTTPException(
-            status_code=403,
-            detail="You have reached your free limit. Upgrade to PRO for unlimited generations."
-        )
+    # 2. Check free limits
+    usage = get_usage(user_id)
+    used_count = usage.get("used_count", 0)
+    if used_count >= 2: # Match FREE_LIMIT in permissions.py
+        raise HTTPException(status_code=403, detail="limit_reached, get pro plan")
 
-    # Count usage BEFORE running LLM
-    increment_usage(user_id)
-
+    # 3. Initialize the Twin Engine with the profile
+    profile = TwinProfile(**profile_data)
+    twin = TwinCore(llm=llm_client, profile=profile)
+   
     # -------------------------
     # RUN LLM
     # -------------------------
     try:
-        evolve_personality()
-        #SYNC CALL - correct for llm.py
-        result = generate_content(
-        db=db, 
-        user_id = user_id, 
-        prompt = body.prompt,
-        output_type = body.type,)
-        return {"content": result, "remaining_free": max_free - (usage + 1 )}
-        
+        # 4. Generate content and evolve personality internally
+        # This calls _score_importance and _evolve_personality automatically
+        result = await twin.generate(
+            prompt=f"Template: {body.type}. Prompt: {body.prompt}", 
+            mode="create"
+        )
+
+        # 5. Save the evolved personality back to Supabase
+        updated_profile = twin.profile.model_dump()
+        supabase.table("twin_profiles").upsert(updated_profile).execute()
+
+        # 6. Update usage count
+        increment_usage(user_id)
+
+        return {"content": result}
+
     except Exception as e:
-        raise HTTPException(status_code = 500, detail=str(e))
+        print(f"[ERROR] [GENERATE ERROR] {str(e)}")
+        raise HTTPException(status_code=500, detail="Generation failed")

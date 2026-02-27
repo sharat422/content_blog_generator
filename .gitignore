@@ -1,3 +1,16 @@
-/.env
+.env
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+node_modules/
+dist/
+.vite/
+*.log
+*.txt
+tmp/
+backend/tmp/
+backend/static/
 /README.md
 /run_all.bat

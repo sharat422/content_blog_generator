@@ -7,7 +7,7 @@ const AuthContext = createContext();
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
-  
+
 
   // ------------------------------
   // Load session on app start
@@ -85,28 +85,7 @@ export function AuthProvider({ children }) {
     if (error) throw error;
     return data;
   };
-  // ------------------------------
-  // Refresh Plan
-  // ------------------------------
-  const refreshPlan = async () => {
-  try {
-    const token = await getToken();
-    if (!token) return;
 
-    const res = await fetch(`${API_BASE}/api/billing/my-plan`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-
-    const data = await res.json();
-    if (res.ok && data.plan) {
-      setPlan(data.plan);
-    }
-  } catch (err) {
-    console.error("Error loading plan:", err);
-  }
-};
 
 
   // ------------------------------

@@ -1,4 +1,4 @@
-# ============================================================
+﻿# ============================================================
 #   billing.py — Optimized & Production-Safe Version
 # ============================================================
 
@@ -28,16 +28,16 @@ APP_BASE_URL = os.getenv("APP_BASE_URL", "http://localhost:3000")
 
 if STRIPE_SECRET_KEY:
     stripe.api_key = STRIPE_SECRET_KEY
-    print("✅ Stripe initialized")
+    print("[OK] Stripe initialized")
 else:
-    print("❌ STRIPE_SECRET_KEY missing! Stripe will not work.")
+    print("[ERROR] STRIPE_SECRET_KEY missing! Stripe will not work.")
 if not STRIPE_SECRET_KEY:
     raise RuntimeError("STRIPE_SECRET_KEY is missing")
 
 IS_LIVE = STRIPE_SECRET_KEY.startswith("sk_live_")
 
 if os.getenv("ENVIRONMENT") == "production" and not IS_LIVE:
-    raise RuntimeError("🚨 Test Stripe key used in PRODUCTION")
+    raise RuntimeError("[CRITICAL] Test Stripe key used in PRODUCTION")
 
 class PaymentRequest(BaseModel):
     price_id: Optional[str] = None
@@ -62,20 +62,20 @@ def get_user_plan_row(user_id: str):
             .execute()
         )
         if resp is None:
-            print("⚠️ Supabase execute() returned None in get_user_plan_row")
+            print("[WARN] Supabase execute() returned None in get_user_plan_row")
             return None
 
         # supabase-py response normally has .data and .error
         err = getattr(resp, "error", None)
         if err:
-            print("⚠️ Supabase error in get_user_plan_row:", err)
+            print("[WARN] Supabase error in get_user_plan_row:", err)
             return None
 
         data = getattr(resp, "data", None)
         return data or None
 
     except Exception as e:
-        print("❌ Exception in get_user_plan_row:", repr(e))
+        print("[ERROR] Exception in get_user_plan_row:", repr(e))
         return None
 
 
@@ -90,7 +90,7 @@ async def create_checkout_session(
     """Create Stripe Checkout session for subscription."""
 
     price_id = payment.price_id or DEFAULT_PRICE_ID_PRO
-    #print(f"➡️ Using default price ID: {price_id}")
+    #print(f"--> Using default price ID: {price_id}")
     #print(f"{payment}")
     if not price_id:
         raise HTTPException(400, "Missing price_id")
@@ -98,7 +98,7 @@ async def create_checkout_session(
     email = user.get("email")
     user_id = user.get("id")
    
-    # ✅ If already subscribed, do NOT send them to checkout again.
+    # If already subscribed, do NOT send them to checkout again.
     row = get_user_plan_row(user_id)
     if row and row.get("plan") == "pro" and row.get("subscription_status") in ACTIVE_SUB_STATUSES:
         customer_id = row.get("stripe_customer_id")
@@ -122,7 +122,7 @@ async def create_checkout_session(
         result = stripe.Customer.list(email=email, limit=1)
         if result.data:
             customer = result.data[0]
-           # print(f"➡️ Existing customer: {customer.id}")
+           # print(f"--> Existing customer: {customer.id}")
 
             stripe.Customer.modify(
                 customer.id,
@@ -133,10 +133,10 @@ async def create_checkout_session(
                 email=email,
                 metadata={"supabase_user_id": user_id, "email": email},
             )
-           # print(f"➡️ Created new customer: {customer.id}")
+           # print(f"--> Created new customer: {customer.id}")
 
     except Exception as e:
-        print("❌ Error preparing Stripe customer", e)
+        print("[ERROR] Error preparing Stripe customer", e)
         raise HTTPException(500, "Stripe customer error")
 
     # Create a checkout session
@@ -152,11 +152,11 @@ async def create_checkout_session(
                 "supabase_email": email,
             },
         )
-       # print("➡️ Checkout session created:", session.id)
+       # print("--> Checkout session created:", session.id)
         return {"checkout_url": session.url}
 
     except Exception as e:
-        print("❌ Checkout error: ", e)
+        print("[ERROR] Checkout error: ", e)
         raise HTTPException(500, "Stripe checkout error")
 # ------------------------------------------------------------
 # Billing Status (Frontend uses this to hide/disable Pro)
@@ -220,12 +220,12 @@ def extract_user_id(data: Dict[str, Any], customer_id: Optional[str]):
             cm = cust.get("metadata") or {}
             uid = cm.get("supabase_user_id")
             if uid:
-                print(f"➡️ Resolved user from customer metadata: {uid}")
+                print(f"--> Resolved user from customer metadata: {uid}")
                 return uid
         except Exception as e:
-            print("⚠️ Could not retrieve customer metadata", e)
+            print("[WARN] Could not retrieve customer metadata", e)
 
-    print("⚠️ No supabase_user_id found anywhere")
+    print("[WARN] No supabase_user_id found anywhere")
     return None
 
 
@@ -243,7 +243,7 @@ async def stripe_webhook(request: Request):
             payload, sig_header, STRIPE_WEBHOOK_SECRET
         )
     except Exception as e:
-        print("❌ Invalid webhook signature:", e)
+        print("[ERROR] Invalid webhook signature:", e)
         raise HTTPException(400, "Invalid signature")
 
     event_type = event["type"]
@@ -275,7 +275,7 @@ async def stripe_webhook(request: Request):
             subscription_status=status,
         )
 
-       # print(f"➡️ Updated plan → {user_id} → {plan}")
+       # print(f"--> Updated plan → {user_id} → {plan}")
         return {"received": True}
 
     # ------------------------------
@@ -298,7 +298,7 @@ async def stripe_webhook(request: Request):
             subscription_status="canceled",
         )
 
-        print("➡️ Subscription canceled for", user_id)
+        print("--> Subscription canceled for", user_id)
         return {"received": True}
 
     # ------------------------------
@@ -324,7 +324,7 @@ async def stripe_webhook(request: Request):
         )
 
         # refill credits
-        print(f"➡️ Refill credits for {user_id}")
+        print(f"--> Refill credits for {user_id}")
         refill_pro_credits(user_id)
 
         return {"received": True}
@@ -332,5 +332,5 @@ async def stripe_webhook(request: Request):
     # ------------------------------
     # Unhandled events (ignored)
     # ------------------------------
-    print("ℹ️ Unhandled event:", event_type)
+    print("[INFO] Unhandled event:", event_type)
     return {"received": True}

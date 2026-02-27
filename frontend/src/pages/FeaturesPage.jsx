@@ -3,10 +3,10 @@ import { motion } from "framer-motion";
 import {
   Zap,
   PenTool,
-  Share2,
-  Layers,
-  BarChart,
   ShieldCheck,
+  ShoppingCart,
+  Search,
+  Tag,
 } from "lucide-react";
 
 const features = [
@@ -22,24 +22,24 @@ const features = [
       "Save hours of work with instant content generation powered by cutting-edge AI.",
     icon: Zap,
   },
-   //{
-   // name: "Collaboration Tools",
-   // description:
-    //  "Invite your team, manage projects, and co-create content together in real-time.",
-    //icon: Share2,
-  //},
-  //{
-   // name: "Custom Templates",
-    //description:
-    //  "Choose from a wide range of content templates or build your own tailored to your needs.",
-    //icon: Layers,
-  //},
-  //{
-   // name: "Analytics Dashboard",
-   // description:
-   //   "Track engagement and performance of your generated content with built-in insights.",
-   // icon: BarChart,
-  //}, */},
+  {
+    name: "SEO-Optimized Output",
+    description:
+      "Every piece of content comes with meta titles, meta descriptions, focus keywords, and LSI keywords built-in.",
+    icon: Search,
+  },
+  {
+    name: "Ecommerce-Ready Templates",
+    description:
+      "Amazon listings, Shopify product pages, eBay listings, category pages, and product FAQs — all tailored for ecommerce sellers.",
+    icon: ShoppingCart,
+  },
+  {
+    name: "Meta Tags Generator",
+    description:
+      "Generate complete meta titles, descriptions, Open Graph, and Twitter Card tags for any product page.",
+    icon: Tag,
+  },
   {
     name: "Enterprise-Grade Security",
     description:

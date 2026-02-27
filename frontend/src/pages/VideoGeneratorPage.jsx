@@ -3,7 +3,6 @@
 import React, { useState } from "react";
 import { Loader2, Video, ImageIcon } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
-//import VideoPlayer from "../components/video_renderer"; // Assuming you have a VideoPlayer component
 import {
   Card,
   CardContent,
@@ -14,8 +13,6 @@ import {
 import Input from "../components/ui/Input";
 import Button from "../components/ui/Button";
 
-//import { Textarea } from "../components/ui/textarea";
-
 const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
 // NOTE: Hardcoding costs. Ideally, these would come from a context/config.
@@ -24,8 +21,7 @@ const COST_IMAGE_GEN_BASIC = 25;
 const COST_VIDEO_RENDER_BASIC = 100;
 
 export default function VideoGeneratorPage() {
-  const { user, setCredits } = useAuth();
-  const authToken = user?.token;
+  const { user, getToken } = useAuth();
 
   // Shared States
   const [topic, setTopic] = useState("");
@@ -79,11 +75,13 @@ export default function VideoGeneratorPage() {
     setLoadingImage(true);
 
     try {
+      const token = await getToken();
+      if (!token) throw new Error("Login expired. Please log in again.");
       const res = await fetch(`${API_BASE}/api/image/generate`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${authToken}`,
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({ prompt: imagePrompt }),
       });
@@ -99,9 +97,6 @@ export default function VideoGeneratorPage() {
 
       const data = await res.json();
       setImageUrl(data.image_url);
-      // NOTE: This assumes the image generation endpoint returns the final credit amount or
-      // you have a separate API call to fetch the updated credits.
-      if (setCredits) setCredits((prev) => prev - COST_IMAGE_GEN_BASIC); 
     } catch (err) {
       console.error(err);
       setError(err.message || "Image generation failed.");
@@ -125,11 +120,13 @@ export default function VideoGeneratorPage() {
     setLoadingPlan(true);
 
     try {
+      const token = await getToken();
+      if (!token) throw new Error("Login expired. Please log in again.");
       const res = await fetch(`${API_BASE}/api/video/plan`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${authToken}`,
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({ topic, style }),
       });
@@ -145,8 +142,6 @@ export default function VideoGeneratorPage() {
 
       const data = await res.json();
       setScenes(data.scenes);
-      // The plan step deducts the planning credit
-      if (setCredits) setCredits((prev) => prev - COST_PLAN_BASIC); 
     } catch (err) {
       console.error(err);
       setError(err.message || "Failed to generate video plan.");
@@ -165,11 +160,13 @@ export default function VideoGeneratorPage() {
     setLoadingRender(true);
 
     try {
+      const token = await getToken();
+      if (!token) throw new Error("Login expired. Please log in again.");
       const res = await fetch(`${API_BASE}/api/video/render`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${authToken}`,
+          Authorization: `Bearer ${token}`,
         },
         // The scenes array includes the image_prompt field
         body: JSON.stringify({ scenes, with_voiceover: withVoiceover }),
@@ -186,11 +183,6 @@ export default function VideoGeneratorPage() {
 
       const data = await res.json();
       setVideoUrl(data.video_url);
-
-      // NOTE: The render endpoint deducts ALL remaining credits (render + image + voiceover).
-      // You must implement a logic here to refresh/deduct the correct amount.
-      // For now, we will simply trigger a refresh or deduct a large placeholder amount.
-      if (setCredits) setCredits((prev) => prev - 150); // Placeholder deduction
     } catch (err) {
       console.error(err);
       setError(err.message || "Failed to render video.");
@@ -207,7 +199,7 @@ export default function VideoGeneratorPage() {
   async function handleGenerateYtScript() {
     setError("YouTube flow is a placeholder in this update.");
   }
-  
+
   // Placeholder function for YouTube rendering
   async function handleRenderYtVideo() {
     setError("YouTube flow is a placeholder in this update.");
@@ -288,16 +280,16 @@ export default function VideoGeneratorPage() {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
-            <Textarea
+            <textarea
               value={imagePrompt}
               onChange={(e) => setImagePrompt(e.target.value)}
               placeholder="Enter a detailed, creative prompt for your vertical (9:16) image."
-              className="min-h-[150px]"
+              className="w-full min-h-[150px] p-3 rounded-md border border-gray-300 dark:border-gray-700 dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm resize-none"
             />
 
             <Button
               onClick={handleGenerateImage}
-              disabled={loadingImage || !authToken}
+              disabled={loadingImage || !user}
               className="w-full"
             >
               {loadingImage ? (
@@ -348,7 +340,7 @@ export default function VideoGeneratorPage() {
 
               <Button
                 onClick={handlePlan}
-                disabled={loadingPlan || loadingRender || !authToken}
+                disabled={loadingPlan || loadingRender || !user}
                 className="w-full"
               >
                 {loadingPlan ? (
@@ -397,12 +389,12 @@ export default function VideoGeneratorPage() {
                       <label className="block text-sm font-medium pt-2">
                         AI Image Prompt
                       </label>
-                      <Textarea
+                      <textarea
                         value={scene.image_prompt || ""}
                         onChange={(e) =>
                           updateScene(idx, "image_prompt", e.target.value)
                         }
-                        className="min-h-[60px]"
+                        className="w-full min-h-[60px] p-2 rounded-md border border-gray-300 dark:border-gray-700 dark:bg-gray-800 focus:outline-none focus:ring-1 focus:ring-indigo-500 text-sm resize-y"
                         placeholder="Detailed prompt for background image (vertical 9:16)"
                       />
 
@@ -446,7 +438,7 @@ export default function VideoGeneratorPage() {
 
                   <Button
                     onClick={handleRender}
-                    disabled={loadingRender || !authToken}
+                    disabled={loadingRender || !user}
                     className="w-full"
                   >
                     {loadingRender ? (
@@ -465,7 +457,7 @@ export default function VideoGeneratorPage() {
                     Final Video Preview
                   </h3>
                   <div className="flex justify-center">
-                    <VideoPlayer src={videoUrl} />
+                    <video src={videoUrl} controls className="w-full max-w-sm rounded-[24px] shadow-2xl border-4 border-slate-800 bg-black aspect-[9/16]" />
                   </div>
                 </div>
               )}
@@ -494,7 +486,7 @@ export default function VideoGeneratorPage() {
             {sharedControls}
             <Button
               onClick={handleGenerateYtScript}
-              disabled={ytLoadingScript || !authToken}
+              disabled={ytLoadingScript || !user}
               className="w-full"
             >
               Generate Long-Form Script (WIP)
@@ -502,10 +494,10 @@ export default function VideoGeneratorPage() {
 
             {ytScript && (
               <div className="space-y-4">
-                <Textarea
+                <textarea
                   value={ytScript}
                   onChange={(e) => setYtScript(e.target.value)}
-                  className="min-h-[300px]"
+                  className="w-full min-h-[300px] p-3 rounded-md border border-gray-300 dark:border-gray-700 dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm resize-y"
                 />
                 <div className="flex items-center gap-3">
                   <input
@@ -521,7 +513,7 @@ export default function VideoGeneratorPage() {
                 </div>
                 <Button
                   onClick={handleRenderYtVideo}
-                  disabled={ytLoadingVideo || !authToken}
+                  disabled={ytLoadingVideo || !user}
                   className="w-full"
                 >
                   Render YouTube Video (WIP)
@@ -534,7 +526,7 @@ export default function VideoGeneratorPage() {
                   Final Video Preview
                 </h3>
                 <div className="flex justify-center">
-                  <VideoPlayer src={ytVideoUrl} />
+                  <video src={ytVideoUrl} controls className="w-full rounded-xl shadow-lg border border-gray-700 aspect-video bg-black" />
                 </div>
               </div>
             )}

@@ -1,4 +1,4 @@
-import os
+﻿import os
 from typing import Optional
 from pathlib import Path
 import httpx
@@ -75,7 +75,7 @@ class XaiClient:
         self.model = settings.model_name or "grok-4"
 
         if not self.api_key:
-            print("❌ [XAI CLIENT] Missing XAI_API_KEY — LLM will not work.")
+            print("[XAI CLIENT] ERROR: Missing XAI_API_KEY - LLM will not work.")
 
     async def chat(self, system_prompt: str, user_prompt: str, creativity: float = 0.7):
         """
@@ -109,7 +109,7 @@ class XaiClient:
             )
 
         if response.status_code != 200:
-            print("❌ [XAI ERROR]", response.text)
+            print("[XAI ERROR]", response.text)
             raise Exception(f"Grok API Error {response.status_code}: {response.text}")
 
         data = response.json()
@@ -120,7 +120,7 @@ class XaiClient:
 # Instantiate global client
 llm_client = XaiClient()
 
-print("✅ XAI Grok Client initialized as llm_client")
+print("[OK] XAI Grok Client initialized as llm_client")
    
 # ---------------------------\
 # Main LLM function
@@ -153,7 +153,7 @@ async def generate_llm_content(prompt: str, template: str):
         "Content-Type": "application/json",
     }
     
-    # 🌟 DEBUG STEP 1: Print Config Check
+    # [*] DEBUG STEP 1: Print Config Check
     print("\n--- LLM API DEBUG START ---")
     print(f"[LLM DEBUG] Base URL: {settings.XAI_API_BASE}")
     print(f"[LLM DEBUG] API Key Check: {'SET' if settings.XAI_API_KEY and len(settings.XAI_API_KEY)>10 else 'MISSING/TOO SHORT'}")
@@ -167,17 +167,17 @@ async def generate_llm_content(prompt: str, template: str):
         async with httpx.AsyncClient(base_url=settings.XAI_API_BASE, timeout=90.0) as client:
             response = await client.post("/chat/completions", json=payload, headers=headers)
     
-    # 🌟 DEBUG STEP 2: Catch Network/Connection Errors
+    # [*] DEBUG STEP 2: Catch Network/Connection Errors
     except httpx.RequestError as e:
-        print(f"❌ [LLM FAILURE] HTTPX Request Error: Could not connect to {settings.XAI_API_BASE}. Error: {e}")
+        print(f"[LLM FAILURE] HTTPX Request Error: Could not connect to {settings.XAI_API_BASE}. Error: {e}")
         # Re-raise the exception with a clear message
         raise Exception(f"Network request to LLM failed: {e}")        
 
-    # 🌟 DEBUG STEP 3: Check API Status Code (Authorization, Bad Request, etc.)
+    # [*] DEBUG STEP 3: Check API Status Code (Authorization, Bad Request, etc.)
     if response.status_code != 200:
-        print(f"❌ [LLM FAILURE] API Status: {response.status_code}")
+        print(f"[LLM FAILURE] API Status: {response.status_code}")
         # Print the API's error body for max detail
-        print(f"❌ [LLM FAILURE] API Response: {response.text}") 
+        print(f"[LLM FAILURE] API Response: {response.text}") 
         # Re-raise the exception with a clear message
         raise Exception(f"LLM API Error {response.status_code}: {response.text}")
 
