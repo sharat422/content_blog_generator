@@ -63,10 +63,7 @@ export default function Navbar() {
 
         {/* Logo */}
         <Link to="/" className="flex items-center space-x-2">
-          <div className="relative">
-            <PenTool className="h-7 w-7 text-indigo-600 dark:text-indigo-400" />
-            <Sparkles className="h-4 w-4 text-indigo-400 absolute -top-1 -right-1 animate-pulse" />
-          </div>
+          <img src="/logo.png" alt="WriteSwift Logo" className="h-10 w-10 object-contain rounded-full" />
           <h1 className="text-xl font-bold text-indigo-600 dark:text-indigo-400">
             WriteSwift<span className="text-slate-700 dark:text-slate-300">.ai</span>
           </h1>
