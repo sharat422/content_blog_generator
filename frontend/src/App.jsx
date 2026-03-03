@@ -7,6 +7,7 @@ import TwinPage from "./pages/TwinPage";
 
 // UI kit
 import Navbar from "./components/ui/Navbar";
+import Chatbot from "./components/ui/Chatbot";
 
 // Pages
 import HomePage from "./pages/HomePage";
@@ -51,6 +52,7 @@ export default function App() {
           <Route path="/login" element={<LoginPage />} />
           <Route path="/signup" element={<SignupPage />} />
         </Routes>
+        <Chatbot />
         <ScrollToTopButton />
       </div>
     </HelmetProvider>

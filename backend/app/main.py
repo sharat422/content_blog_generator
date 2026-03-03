@@ -8,7 +8,7 @@ from fastapi.staticfiles import StaticFiles
 import os
 load_dotenv()
 
-from app.api import twin, auth, youtube_video, video, billing, credits, billing_plan, ecommerce
+from app.api import twin, auth, youtube_video, video, billing, credits, billing_plan, ecommerce, chatbot
 from app.routes import generator, templates
 
 app = FastAPI(title="Content & Blog Generator")
@@ -46,6 +46,7 @@ app.include_router(credits.router)
 app.include_router(billing_plan.router)
 app.include_router(ecommerce.router)
 app.include_router(twin.router, prefix="/api/twin", tags=["Twin"])
+app.include_router(chatbot.router, prefix="/api/chatbot", tags=["chatbot"])
 
 @app.get("/")
 def root():
