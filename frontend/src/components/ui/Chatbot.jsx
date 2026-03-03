@@ -71,7 +71,7 @@ export default function Chatbot() {
                     </div>
 
                     {/* Messages Area */}
-                    <div className="flex-1 p-4 h-80 overflow-y-auto bg-slate-50 dark:bg-slate-950 space-y-4">
+                    <div className="flex-1 p-4 h-80 overflow-y-scroll bg-slate-50 dark:bg-slate-950 space-y-4 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-indigo-300 [&::-webkit-scrollbar-thumb]:rounded-full dark:[&::-webkit-scrollbar-thumb]:bg-indigo-700">
                         {messages.map((msg, idx) => (
                             <div
                                 key={idx}
