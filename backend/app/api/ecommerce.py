@@ -25,6 +25,7 @@ ContentType = Literal[
     "category_page",
     "product_faq",
     "meta_tags",
+    "full_campaign",
 ]
 
 Platform = Literal["shopify", "amazon", "ebay", "etsy", "general"]
@@ -35,6 +36,7 @@ class EcommerceGenerateRequest(BaseModel):
     product_name: str
     product_category: str = "General"
     key_features: str = ""
+    pain_points: str = ""
     target_audience: str = "online shoppers"
     platform: Platform = "general"
     content_type: ContentType = "product_description"
@@ -51,6 +53,9 @@ class EcommerceGenerateResponse(BaseModel):
     faq: list
     schema_type: str
     seo_score: int
+    ab_test_titles: Optional[list] = None
+    social_captions: Optional[list] = None
+    schema_json_ld: Optional[str] = None
     # Optional fields for marketplace listings
     bullet_points: Optional[list] = None
     # Optional OG/Twitter for meta_tags content type
@@ -81,6 +86,7 @@ async def generate_ecommerce(
             product_name=body.product_name,
             product_category=body.product_category,
             key_features=body.key_features,
+            pain_points=body.pain_points,
             target_audience=body.target_audience,
             platform=body.platform,
             content_type=body.content_type,
@@ -97,6 +103,9 @@ async def generate_ecommerce(
     result.setdefault("schema_type", "Product")
     result.setdefault("faq", [])
     result.setdefault("secondary_keywords", [])
+    result.setdefault("ab_test_titles", None)
+    result.setdefault("social_captions", None)
+    result.setdefault("schema_json_ld", None)
     result.setdefault("bullet_points", None)
     result.setdefault("og_title", None)
     result.setdefault("og_description", None)
@@ -157,5 +166,13 @@ def get_ecommerce_templates():
             "icon": "🏷️",
             "credit_cost": 2,
             "platforms": ["shopify", "general"],
+        },
+        {
+            "id": "full_campaign",
+            "label": "Full Campaign",
+            "description": "All-in-one generator: description, social media captions, and ad copy aligned to your brand voice",
+            "icon": "🚀",
+            "credit_cost": 10,
+            "platforms": ["shopify", "general", "amazon"],
         },
     ]

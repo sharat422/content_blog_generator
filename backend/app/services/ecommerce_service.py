@@ -19,7 +19,8 @@ def _build_system_prompt(content_type: str) -> str:
         "You are an expert ecommerce SEO copywriter with 10+ years of experience "
         "writing content that ranks on Google, converts shoppers, and follows "
         "Amazon/Shopify/eBay best practices. "
-        "Always respond with a valid JSON object — no markdown, no code fences, just raw JSON."
+        "If pain points are provided, aggressively target them in your copy to demonstrate exactly how the product solves the customer's problem. "
+        "Always respond with a single, highly structured, valid JSON object — no conversational text, no markdown, no code fences, just raw JSON."
     )
 
     instructions = {
@@ -34,7 +35,9 @@ def _build_system_prompt(content_type: str) -> str:
             "bullet points for features, persuasive benefit-driven language, "
             "naturally includes focus keyword and secondary keywords\n"
             "- faq: list of 3 objects with 'question' and 'answer' keys each (structured data ready)\n"
-            "- schema_type: always 'Product'"
+            "- schema_type: always 'Product'\n"
+            "- ab_test_titles: A list of 3 highly persuasive Hook Titles for A/B testing\n"
+            "- schema_json_ld: A raw string containing a perfectly valid JSON-LD <script> block for the Product schema"
         ),
         "blog_post": (
             "Write a full SEO blog post for ecommerce. The JSON must have these keys:\n"
@@ -47,7 +50,9 @@ def _build_system_prompt(content_type: str) -> str:
             "internal linking suggestions in [brackets], naturally integrates keywords, "
             "includes an intro hook, numbered tips or steps, and a CTA conclusion\n"
             "- faq: list of 4 objects with 'question' and 'answer' keys for FAQ schema\n"
-            "- schema_type: always 'BlogPosting'"
+            "- schema_type: always 'BlogPosting'\n"
+            "- ab_test_titles: A list of 3 highly clickbaity Hook Titles for A/B testing\n"
+            "- schema_json_ld: A raw string containing a JSON-LD <script> block for the BlogPosting schema"
         ),
         "marketplace_listing": (
             "Write a marketplace listing (Amazon/eBay/Etsy style). The JSON must have these keys:\n"
@@ -60,7 +65,9 @@ def _build_system_prompt(content_type: str) -> str:
             "benefit word, under 200 chars each — as a JSON array\n"
             "- body: long product description (250-400 words) with keyword integration\n"
             "- faq: list of 3 Q&A objects that address common buyer objections\n"
-            "- schema_type: always 'Product'"
+            "- schema_type: always 'Product'\n"
+            "- ab_test_titles: A list of 3 aggressive hook titles for listing optimization\n"
+            "- schema_json_ld: null"
         ),
         "category_page": (
             "Write SEO category/collection page content. The JSON must have these keys:\n"
@@ -72,7 +79,9 @@ def _build_system_prompt(content_type: str) -> str:
             "- body: Category page intro (150-300 words) — buyer-intent language, "
             "explains what products are in this category, includes keyword naturally\n"
             "- faq: list of 2-3 category FAQs as JSON objects with question/answer\n"
-            "- schema_type: always 'CollectionPage'"
+            "- schema_type: always 'CollectionPage'\n"
+            "- ab_test_titles: A list of 3 Hook Titles for Category Pages\n"
+            "- schema_json_ld: A raw string containing a JSON-LD <script> block for the CollectionPage schema"
         ),
         "product_faq": (
             "Write a product FAQ optimized for Google Featured Snippets. The JSON must have these keys:\n"
@@ -84,7 +93,8 @@ def _build_system_prompt(content_type: str) -> str:
             "- faq: list of 8 detailed Q&A objects with 'question' and 'answer' keys. "
             "Answers should be 40-80 words each, factual and direct\n"
             "- body: short intro paragraph (50-80 words) before the FAQs\n"
-            "- schema_type: always 'FAQPage'"
+            "- schema_type: always 'FAQPage'\n"
+            "- schema_json_ld: A raw string containing a JSON-LD <script> block for the FAQPage using the generated Q&A."
         ),
         "meta_tags": (
             "Generate optimized meta tags for any ecommerce page. The JSON must have these keys:\n"
@@ -101,6 +111,20 @@ def _build_system_prompt(content_type: str) -> str:
             "- faq: empty list []\n"
             "- schema_type: 'WebPage'"
         ),
+        "full_campaign": (
+            "Write a comprehensive E-commerce campaign package. The JSON must have these keys:\n"
+            "- title: Aggressive, high-conversion Campaign Title\n"
+            "- meta_title: SEO meta title, 50-60 chars\n"
+            "- meta_description: 150-160 char meta description\n"
+            "- focus_keyword: primary campaign keyword phrase\n"
+            "- secondary_keywords: list of 5-8 related keywords as a JSON array\n"
+            "- body: Short, punchy ad-copy description optimized for the sales landing page\n"
+            "- social_captions: list of 3 engaging social media captions complete with emojis and hashtags\n"
+            "- ab_test_titles: list of 3 highly persuasive Hook Titles for A/B email subject line testing\n"
+            "- faq: list of 3 objects with 'question' and 'answer' addressing common objections\n"
+            "- schema_type: always 'Product'\n"
+            "- schema_json_ld: A raw string containing a perfectly valid JSON-LD <script> block for the Product schema"
+        ),
     }
 
     return base + "\n\n" + instructions.get(content_type, instructions["product_description"])
@@ -110,6 +134,7 @@ def _build_user_prompt(
     product_name: str,
     product_category: str,
     key_features: str,
+    pain_points: str,
     target_audience: str,
     platform: str,
     content_type: str,
@@ -135,6 +160,7 @@ def _build_user_prompt(
         f"Product / Page: {product_name}\n"
         f"Category: {product_category}\n"
         f"Key Features / Details: {key_features}\n"
+        f"Customer Pain Points to Address: {pain_points}\n"
         f"Target Audience: {target_audience}\n"
         f"Platform: {platform_map.get(platform, platform)}\n"
         f"Content Type: {content_type.replace('_', ' ').title()}\n"
@@ -151,6 +177,7 @@ async def generate_ecommerce_content(
     product_name: str,
     product_category: str,
     key_features: str,
+    pain_points: str,
     target_audience: str,
     platform: str,
     content_type: str,
@@ -166,6 +193,7 @@ async def generate_ecommerce_content(
         product_name=product_name,
         product_category=product_category,
         key_features=key_features,
+        pain_points=pain_points,
         target_audience=target_audience,
         platform=platform,
         content_type=content_type,
@@ -201,16 +229,16 @@ async def generate_ecommerce_content(
     data = response.json()
     raw_text = data["choices"][0]["message"]["content"].strip()
 
-    # Strip any accidental markdown fences the model might add
-    if raw_text.startswith("```"):
-        raw_text = raw_text.split("```")[1]
-        if raw_text.startswith("json"):
-            raw_text = raw_text[4:]
-        raw_text = raw_text.strip()
-
+    # Strip conversational text with robust bracket extraction
     try:
-        result = json.loads(raw_text)
-    except json.JSONDecodeError as e:
+        start = raw_text.find("{")
+        end = raw_text.rfind("}")
+        if start != -1 and end != -1 and end > start:
+            json_str = raw_text[start:end+1]
+        else:
+            json_str = raw_text
+        result = json.loads(json_str)
+    except Exception as e:
         print(f"[ECOMMERCE] JSON parse failed: {e}\nRaw: {raw_text[:500]}")
         # Graceful fallback: return raw text in body field
         result = {
@@ -239,19 +267,23 @@ def calculate_seo_score(result: dict) -> int:
     score = 0
     checks = [
         # Meta title: exists and within 50-60 chars
-        (bool(result.get("meta_title")) and 50 <= len(result.get("meta_title", "")) <= 65, 20),
+        (bool(result.get("meta_title")) and 50 <= len(result.get("meta_title", "")) <= 65, 15),
         # Meta description: exists and within 130-165 chars
-        (bool(result.get("meta_description")) and 130 <= len(result.get("meta_description", "")) <= 165, 20),
+        (bool(result.get("meta_description")) and 130 <= len(result.get("meta_description", "")) <= 165, 15),
         # Focus keyword present
         (bool(result.get("focus_keyword")), 10),
         # Secondary keywords: at least 3
         (isinstance(result.get("secondary_keywords"), list) and len(result.get("secondary_keywords", [])) >= 3, 10),
         # Body: at least 150 words
-        (len(result.get("body", "").split()) >= 150, 20),
+        (len(result.get("body", "").split()) >= 150, 15),
         # Title: present
         (bool(result.get("title")), 10),
+        # Schema LD: added
+        (bool(result.get("schema_json_ld")), 10),
+        # AB Test Titles added
+        (isinstance(result.get("ab_test_titles"), list) and len(result.get("ab_test_titles", [])) >= 2, 10),
         # FAQ: at least 2 entries
-        (isinstance(result.get("faq"), list) and len(result.get("faq", [])) >= 2, 10),
+        (isinstance(result.get("faq"), list) and len(result.get("faq", [])) >= 2, 5),
     ]
     for condition, points in checks:
         if condition:

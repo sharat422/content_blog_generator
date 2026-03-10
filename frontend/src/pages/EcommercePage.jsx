@@ -18,6 +18,7 @@ import {
     Sparkles,
     TrendingUp,
     AlertCircle,
+    Code
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 
@@ -75,6 +76,14 @@ const CONTENT_TYPES = [
         color: "teal",
         desc: "Title, meta description, Open Graph & Twitter Card tags",
         cost: 2,
+    },
+    {
+        id: "full_campaign",
+        label: "Full Campaign",
+        icon: Sparkles,
+        color: "indigo",
+        desc: "All-in-one generator: description, social media captions, and ad copy aligned to your brand voice",
+        cost: 10,
     },
 ];
 
@@ -188,6 +197,7 @@ export default function EcommercePage() {
     const [productName, setProductName] = useState("");
     const [productCategory, setProductCategory] = useState("");
     const [keyFeatures, setKeyFeatures] = useState("");
+    const [painPoints, setPainPoints] = useState("");
     const [targetAudience, setTargetAudience] = useState("online shoppers");
     const [platform, setPlatform] = useState("shopify");
     const [tone, setTone] = useState("professional");
@@ -231,6 +241,7 @@ export default function EcommercePage() {
                     product_name: productName,
                     product_category: productCategory || "General",
                     key_features: keyFeatures,
+                    pain_points: painPoints,
                     target_audience: targetAudience,
                     platform,
                     content_type: contentType,
@@ -376,6 +387,20 @@ export default function EcommercePage() {
                                         className="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition resize-none"
                                     />
                                 </div>
+                                
+                                <div>
+                                    <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1 uppercase tracking-wide">
+                                        Customer Pain Points To Target
+                                    </label>
+                                    <textarea
+                                        id="ecommerce-painpoints"
+                                        rows={2}
+                                        value={painPoints}
+                                        onChange={(e) => setPainPoints(e.target.value)}
+                                        placeholder='e.g. "Headphones are uncomfortable for long hours, battery dies quickly on flights"'
+                                        className="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition resize-none"
+                                    />
+                                </div>
 
                                 <div>
                                     <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1 uppercase tracking-wide">
@@ -468,6 +493,7 @@ export default function EcommercePage() {
                                 <div className="text-xs font-bold text-indigo-700 dark:text-indigo-300 uppercase tracking-wide">SEO Tips</div>
                                 <ul className="space-y-1 text-xs text-indigo-700 dark:text-indigo-300">
                                     <li>✓ Include your main keyword in Key Features</li>
+                                    <li>✓ Frame features as solutions via the <b>Customer Pain Points</b> field to skyrocket conversion</li>
                                     <li>✓ Be specific about your target audience</li>
                                     <li>✓ List exact product specs for better keyword targeting</li>
                                     <li>✓ Use "Persuasive" tone for Amazon listing conversions</li>
@@ -548,6 +574,45 @@ export default function EcommercePage() {
                                                 <FileText size={14} /> Content
                                             </h3>
                                             <OutputSection label="Page Title (H1)" value={result.title} />
+                                            
+                                            {/* A/B Test Hook Titles */}
+                                            {result.ab_test_titles && result.ab_test_titles.length > 0 && (
+                                                <div className="border border-indigo-200 dark:border-indigo-800 rounded-xl overflow-hidden shadow-sm">
+                                                    <div className="flex items-center justify-between px-4 py-3 bg-indigo-50 dark:bg-indigo-900/40">
+                                                        <span className="text-sm font-bold text-indigo-700 dark:text-indigo-300 flex items-center gap-2">
+                                                            <Sparkles size={14} /> A/B Test Title Hooks
+                                                        </span>
+                                                        <CopyButton text={result.ab_test_titles.map((b, i) => `${i + 1}. ${b}`).join("\n")} />
+                                                    </div>
+                                                    <ul className="px-4 py-3 space-y-2 bg-white dark:bg-slate-950">
+                                                        {result.ab_test_titles.map((title, i) => (
+                                                            <li key={i} className="text-sm text-slate-700 dark:text-slate-300 flex gap-2">
+                                                                <span className="text-indigo-500 font-bold shrink-0">{i + 1}.</span>
+                                                                {title}
+                                                            </li>
+                                                        ))}
+                                                    </ul>
+                                                </div>
+                                            )}
+
+                                            {/* Social Captions (Full Campaign Only) */}
+                                            {result.social_captions && result.social_captions.length > 0 && (
+                                                <div className="border border-sky-200 dark:border-sky-800 rounded-xl overflow-hidden shadow-sm">
+                                                    <div className="flex items-center justify-between px-4 py-3 bg-sky-50 dark:bg-sky-900/40">
+                                                        <span className="text-sm font-bold text-sky-700 dark:text-sky-300 flex items-center gap-2">
+                                                            Brand Social Media Captions (Instagram/FB/X)
+                                                        </span>
+                                                        <CopyButton text={result.social_captions.join("\n\n---\n\n")} />
+                                                    </div>
+                                                    <ul className="px-4 py-3 space-y-4 bg-white dark:bg-slate-950">
+                                                        {result.social_captions.map((caption, i) => (
+                                                            <li key={i} className="text-sm text-slate-700 dark:text-slate-300 border-b border-slate-100 dark:border-slate-800 pb-3 last:border-0 last:pb-0">
+                                                                {caption}
+                                                            </li>
+                                                        ))}
+                                                    </ul>
+                                                </div>
+                                            )}
 
                                             {/* Bullet points for marketplace listings */}
                                             {result.bullet_points && result.bullet_points.length > 0 && (
@@ -594,18 +659,44 @@ export default function EcommercePage() {
                                             </div>
                                         )}
 
+                                        {/* Schema JSON-LD Section */}
+                                        {result.schema_json_ld && (
+                                            <div className="bg-slate-900 rounded-2xl border border-slate-800 p-4 space-y-3 shadow-md mt-6">
+                                                <div className="flex justify-between items-center mb-1">
+                                                    <h3 className="text-sm font-bold text-emerald-400 flex items-center gap-2">
+                                                        <Code size={14} /> Raw Schema.org JSON-LD SEO Block
+                                                    </h3>
+                                                    <div className="text-xs px-2 py-0.5 rounded-full bg-emerald-900 text-emerald-300 font-mono">
+                                                        {result.schema_type}
+                                                    </div>
+                                                </div>
+                                                <p className="text-xs text-slate-400 mb-2">Paste this directly into the `&lt;head&gt;` of your Shopify template or standard webpage to enable instant SEO Rich Snippets in Google.</p>
+                                                <div className="relative group">
+                                                    <div className="absolute right-2 top-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                        <CopyButton text={result.schema_json_ld} />
+                                                    </div>
+                                                    <pre className="bg-black/50 p-4 rounded-xl text-xs font-mono text-emerald-300/90 overflow-x-auto whitespace-pre-wrap max-h-64 overflow-y-auto custom-scrollbar">
+                                                        {result.schema_json_ld}
+                                                    </pre>
+                                                </div>
+                                            </div>
+                                        )}
+
                                         {/* Copy All Button */}
                                         <button
                                             onClick={() => {
                                                 const all = [
                                                     result.title && `Title: ${result.title}`,
+                                                    result.ab_test_titles?.length && `A/B Test Titles:\n${result.ab_test_titles.map(b => `• ${b}`).join("\n")}`,
                                                     result.meta_title && `Meta Title: ${result.meta_title}`,
                                                     result.meta_description && `Meta Description: ${result.meta_description}`,
                                                     result.focus_keyword && `Focus Keyword: ${result.focus_keyword}`,
                                                     result.secondary_keywords?.length && `Secondary Keywords: ${result.secondary_keywords.join(", ")}`,
                                                     result.bullet_points?.length && `\nBullet Points:\n${result.bullet_points.map(b => `• ${b}`).join("\n")}`,
                                                     result.body && `\nBody:\n${result.body}`,
+                                                    result.social_captions?.length && `\nSocial Media Captions:\n${result.social_captions.join("\n\n")}`,
                                                     result.faq?.length && `\nFAQ:\n${result.faq.map(f => `Q: ${f.question}\nA: ${f.answer}`).join("\n\n")}`,
+                                                    result.schema_json_ld && `\nSchema LD Block:\n${result.schema_json_ld}`
                                                 ].filter(Boolean).join("\n");
                                                 navigator.clipboard.writeText(all);
                                             }}
