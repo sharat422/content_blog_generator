@@ -3,11 +3,13 @@ ecommerce_service.py
 
 Specialized SEO prompt engine for ecommerce sellers.
 Returns structured content: title, meta tags, body, keywords, FAQ.
+Integrated with deduplication service for unique content generation.
 """
 
 import json
 import httpx
 from app.config import settings
+from app.services.deduplication_service import deduplicator, uniqueness_enhancer
 
 
 # ─────────────────────────────────────────────────────────────
@@ -139,6 +141,7 @@ def _build_user_prompt(
     platform: str,
     content_type: str,
     tone: str,
+    variation_count: int = 0,
 ) -> str:
     platform_map = {
         "shopify": "Shopify / WooCommerce store",
@@ -156,7 +159,7 @@ def _build_user_prompt(
         "playful": "fun and energetic",
     }
 
-    return (
+    base_prompt = (
         f"Product / Page: {product_name}\n"
         f"Category: {product_category}\n"
         f"Key Features / Details: {key_features}\n"
@@ -167,6 +170,15 @@ def _build_user_prompt(
         f"Tone: {tone_map.get(tone, tone)}\n\n"
         "Generate the content now. Return ONLY the JSON object."
     )
+    
+    # Add uniqueness augmentation based on variation count
+    if variation_count > 0:
+        variation_instruction = uniqueness_enhancer.variation_instructions[
+            min(variation_count, len(uniqueness_enhancer.variation_instructions) - 1)
+        ]
+        base_prompt += f"\n\nUNIQUENESS REQUIREMENT [VARIATION #{variation_count + 1}]:\n{variation_instruction}"
+    
+    return base_prompt
 
 
 # ─────────────────────────────────────────────────────────────
@@ -182,11 +194,26 @@ async def generate_ecommerce_content(
     platform: str,
     content_type: str,
     tone: str,
+    user_id: str = "anonymous",
 ) -> dict:
     """
     Call the LLM with an ecommerce-specific SEO prompt and return a
     structured dictionary with title, meta tags, body, keywords, and FAQ.
+    Now with uniqueness enhancement and content deduplication.
     """
+    
+    # Track variation count for uniqueness enhancement
+    variation_count = deduplicator.get_variations_required(
+        user_id, 
+        f"{product_name}:{content_type}",
+        platform
+    )
+    print(f"[ECOMMERCE] Variation count: {variation_count}")
+    
+    # Adjust temperature for more uniqueness
+    base_temp = 0.65
+    adjusted_temp = uniqueness_enhancer.adjust_temperature(base_temp, variation_count)
+    print(f"[ECOMMERCE] Temperature adjusted: {base_temp} → {adjusted_temp}")
 
     system_prompt = _build_system_prompt(content_type)
     user_prompt = _build_user_prompt(
@@ -198,11 +225,12 @@ async def generate_ecommerce_content(
         platform=platform,
         content_type=content_type,
         tone=tone,
+        variation_count=variation_count,  # Pass variation count
     )
 
     payload = {
         "model": settings.model_name,
-        "temperature": 0.65,  # slightly lower for more factual/structured output
+        "temperature": adjusted_temp,  # Use adjusted temperature
         "messages": [
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": user_prompt},
@@ -252,7 +280,25 @@ async def generate_ecommerce_content(
             "schema_type": "Product",
         }
 
-    print(f"[ECOMMERCE] SUCCESS — keys returned: {list(result.keys())}")
+    # Track generation for deduplication
+    content_summary = json.dumps(result)
+    deduplicator.track_generation(
+        user_id=user_id,
+        prompt=f"{product_name}:{content_type}",
+        template=f"{platform}:{tone}",
+        content=content_summary,
+        content_type="json",
+    )
+
+    # Calculate uniqueness score
+    uniqueness_score = uniqueness_enhancer._calculate_uniqueness_score(
+        result.get("body", "")
+    )
+
+    result["uniqueness_score"] = uniqueness_score
+    result["variation_count"] = variation_count
+
+    print(f"[ECOMMERCE] SUCCESS — keys returned: {list(result.keys())} | Uniqueness: {uniqueness_score}")
     return result
 
 

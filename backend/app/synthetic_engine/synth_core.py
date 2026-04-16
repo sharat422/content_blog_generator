@@ -3,6 +3,7 @@ import json
 from typing import Dict, Optional, List
 from datetime import datetime
 from app.services.llm_service import llm_client
+from app.services.deduplication_service import deduplicator, uniqueness_enhancer
 
 from pydantic import BaseModel
 
@@ -70,13 +71,25 @@ class SynthCore:
             ),
         }.get(mode, "Respond helpfully and creatively with continuity.")
 
+        # 3a) Check variation count to enhance uniqueness
+        variation_count = deduplicator.get_variations_required(user_id, prompt, mode)
+        print(f"[SynthCore] Variation count for user {user_id}: {variation_count}")
+        
+        # 3b) Augment prompt for uniqueness
+        augmented_prompt = uniqueness_enhancer.augment_prompt(prompt, variation_count)
+        
+        # 3c) Adjust creativity based on variations
+        base_creativity = self.profile.creativity
+        adjusted_creativity = uniqueness_enhancer.adjust_temperature(base_creativity, variation_count)
+        print(f"[SynthCore] Adjusted creativity: {base_creativity} → {adjusted_creativity}")
+
         # 4) Build system prompt (memory-aware + personality-aware)
         system_prompt = f"""
 You are the Synthetic Twin of user {user_id}.
 
 Twin personality:
 - Tone: {self.profile.tone}
-- Creativity: {self.profile.creativity}
+- Creativity: {adjusted_creativity}
 - Favorite topics: {", ".join(self.profile.favorite_topics) if self.profile.favorite_topics else "general growth, business, systems, and self-improvement"}
 
 Core rules:
@@ -84,6 +97,7 @@ Core rules:
 - Show initiative: suggest next steps, not just answers.
 - Be honest when unsure, but still helpful and constructive.
 - Stay aligned with the user's long-term benefit.
+- Generate UNIQUE and ORIGINAL content with fresh perspectives.
 
 Current mode: {mode}
 Mode guideline: {mode_instruction}
@@ -92,14 +106,26 @@ Relevant memory:
 {memory_context}
 """.strip()
 
-        # 5) Ask Grok-4 (X.ai) for the response
+        # 5) Ask Grok-4 (X.ai) for the response with adjusted creativity
         completion = await self.llm.chat(
             system_prompt=system_prompt,
-            user_prompt=prompt,
-            creativity=self.profile.creativity,
+            user_prompt=augmented_prompt,
+            creativity=adjusted_creativity,  # Use adjusted creativity
+        )
+        
+        # 6) Post-process for enhanced uniqueness
+        processed_completion = uniqueness_enhancer.post_process_for_uniqueness(completion, "text")
+
+        # 7) Track generation for deduplication
+        deduplicator.track_generation(
+            user_id=user_id,
+            prompt=prompt,
+            template=mode,
+            content=processed_completion,
+            content_type="text",
         )
 
-        # 6) Store the interaction as STM
+        # 8) Store the interaction as STM
         add_memory(
             user_id=user_id,
             role="user",
@@ -110,16 +136,16 @@ Relevant memory:
         add_memory(
             user_id=user_id,
             role="twin",
-            content=completion,
+            content=processed_completion,
             memory_type="stm",
             importance=0.0,
         )
 
-        # 7) Score importance (should this become long-term memory?)
-        importance = await self._score_importance(prompt, completion)
+        # 9) Score importance (should this become long-term memory?)
+        importance = await self._score_importance(prompt, processed_completion)
 
         if importance >= 0.6:
-            mem_type = await self._classify_memory_type(prompt, completion)
+            mem_type = await self._classify_memory_type(prompt, processed_completion)
             # If classifier gives something unexpected, fall back to "ltm"
             if mem_type not in {"goal", "preference", "fact", "habit", "project", "ltm"}:
                 mem_type = "ltm"
@@ -127,15 +153,15 @@ Relevant memory:
             add_memory(
                 user_id=user_id,
                 role="twin",
-                content=completion,
+                content=processed_completion,
                 memory_type=mem_type,
                 importance=importance,
             )
 
-        # 8) Evolve twin personality over time based on memory
+        # 10) Evolve twin personality over time based on memory
         await self._evolve_personality(user_id)
 
-        return completion
+        return processed_completion
 
     # ---------------------------------------------------------
     # Helper: Build memory context block for the prompt

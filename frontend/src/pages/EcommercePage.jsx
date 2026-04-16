@@ -1,7 +1,7 @@
 // src/pages/EcommercePage.jsx
 // SEO-Optimized Ecommerce Content Generator for sellers
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Helmet } from "react-helmet-async";
 import {
@@ -187,9 +187,174 @@ function OutputSection({ label, value, isCode = false, showCopy = true }) {
 }
 
 // ─────────────────────────────────────────────────────────────────
-// Main Page
+// ShopifyConnectModal Component
+// ─────────────────────────────────────────────────────────────────
+function ShopifyConnectModal({ isOpen, onClose, getToken }) {
+    const [shopUrl, setShopUrl] = useState("");
+    const [loading, setLoading] = useState(false);
+    const [modalError, setModalError] = useState("");
+
+    const handleConnect = async () => {
+        if (!shopUrl.trim()) {
+            setModalError("Please enter a valid Shopify store URL.");
+            return;
+        }
+
+        setLoading(true);
+        setModalError("");
+
+        try {
+            const token = await getToken();
+            const res = await fetch(`${API_BASE}/api/shopify/auth?shop=${encodeURIComponent(shopUrl)}`, {
+                method: "GET",
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
+            });
+
+            if (!res.ok) {
+                const data = await res.json().catch(() => ({}));
+                throw new Error(data.detail || "Failed to initiate connection. Please check the URL.");
+            }
+
+            const data = await res.json();
+            if (data.url) {
+                window.location.href = data.url;
+            } else {
+                throw new Error("No redirect URL returned.");
+            }
+        } catch (err) {
+            setModalError(err.message);
+            setLoading(false);
+        }
+    };
+
+    if (!isOpen) return null;
+
+    return (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+            <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                className="w-full max-w-md bg-white dark:bg-slate-900 rounded-2xl p-6 shadow-2xl border border-slate-200 dark:border-slate-800 relative"
+            >
+                <div className="text-center mb-6">
+                    <div className="w-12 h-12 bg-indigo-100 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-400 rounded-full flex items-center justify-center mx-auto mb-3">
+                        <ShoppingCart size={24} />
+                    </div>
+                    <h3 className="text-xl font-bold text-slate-900 dark:text-slate-100">Connect Shopify</h3>
+                    <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+                        Enter your Shopify store URL to connect your account.
+                    </p>
+                </div>
+
+                <div className="space-y-4">
+                    <div>
+                        <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1 uppercase tracking-wide">
+                            Shopify Store URL
+                        </label>
+                        <input
+                            type="text"
+                            value={shopUrl}
+                            onChange={(e) => setShopUrl(e.target.value)}
+                            placeholder="e.g. my-store.myshopify.com"
+                            className="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition"
+                        />
+                    </div>
+
+                    {modalError && (
+                        <div className="flex items-start gap-2 p-3 rounded-lg bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800 text-sm text-red-700 dark:text-red-400">
+                            <AlertCircle size={14} className="mt-0.5 shrink-0" />
+                            {modalError}
+                        </div>
+                    )}
+
+                    <div className="flex gap-3">
+                        <button
+                            onClick={onClose}
+                            className="flex-1 px-4 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-xl font-semibold text-sm transition"
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            onClick={handleConnect}
+                            disabled={loading || !shopUrl.trim()}
+                            className="flex-1 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white rounded-xl font-semibold text-sm transition flex items-center justify-center gap-2"
+                        >
+                            {loading ? "Connecting..." : "Connect Store"}
+                        </button>
+                    </div>
+                </div>
+            </motion.div>
+        </div>
+    );
+}
+import ShopifyDashboard from "../components/shopify/ShopifyDashboard";
+
+// ─────────────────────────────────────────────────────────────────
+// Main Page wrapper
 // ─────────────────────────────────────────────────────────────────
 export default function EcommercePage() {
+    const { user, getToken } = useAuth();
+    const [connectedShop, setConnectedShop] = useState(null);
+    const [checkingShop, setCheckingShop] = useState(true);
+
+    const checkShopifyConnection = async () => {
+        if (!user) {
+            setCheckingShop(false);
+            return;
+        }
+        
+        try {
+            const token = await getToken();
+            const res = await fetch(`${API_BASE}/api/shopify/status`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            
+            if (res.ok) {
+                const data = await res.json();
+                if (data.connected && data.shop_domain) {
+                    setConnectedShop(data.shop_domain);
+                } else {
+                    setConnectedShop(null);
+                }
+            }
+        } catch (e) {
+            console.error("Failed to check shopify status", e);
+        } finally {
+            setCheckingShop(false);
+        }
+    };
+
+    useEffect(() => {
+        checkShopifyConnection();
+    }, [user]);
+
+    if (checkingShop) {
+        return <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex items-center justify-center"><div className="animate-pulse bg-slate-200 dark:bg-slate-800 h-8 w-32 rounded"></div></div>;
+    }
+
+    if (connectedShop) {
+        return (
+            <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pt-20 pb-16 px-4">
+                <div className="max-w-[1400px] mx-auto">
+                    <ShopifyDashboard 
+                        shopDomain={connectedShop} 
+                        onDisconnect={() => setConnectedShop(null)} 
+                    />
+                </div>
+            </div>
+        );
+    }
+    
+    return <EcommercePageFallback onConnected={() => checkShopifyConnection()} />;
+}
+
+// ─────────────────────────────────────────────────────────────────
+// Original Generator Form (Fallback)
+// ─────────────────────────────────────────────────────────────────
+function EcommercePageFallback({ onConnected }) {
     const { user, getToken } = useAuth();
 
     // Form state
@@ -201,6 +366,8 @@ export default function EcommercePage() {
     const [targetAudience, setTargetAudience] = useState("online shoppers");
     const [platform, setPlatform] = useState("shopify");
     const [tone, setTone] = useState("professional");
+    
+    const [showShopifyModal, setShowShopifyModal] = useState(false);
 
     // Result state
     const [result, setResult] = useState(null);
@@ -420,16 +587,26 @@ export default function EcommercePage() {
                                     <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1 uppercase tracking-wide">
                                         Platform
                                     </label>
-                                    <select
-                                        id="ecommerce-platform"
-                                        value={platform}
-                                        onChange={(e) => setPlatform(e.target.value)}
-                                        className="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition"
-                                    >
-                                        {PLATFORMS.map((p) => (
-                                            <option key={p.id} value={p.id}>{p.label}</option>
-                                        ))}
-                                    </select>
+                                    <div className="flex items-center gap-3">
+                                        <select
+                                            id="ecommerce-platform"
+                                            value={platform}
+                                            onChange={(e) => setPlatform(e.target.value)}
+                                            className="flex-1 rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition"
+                                        >
+                                            {PLATFORMS.map((p) => (
+                                                <option key={p.id} value={p.id}>{p.label}</option>
+                                            ))}
+                                        </select>
+                                        {platform === "shopify" && user && (
+                                            <button 
+                                                onClick={() => setShowShopifyModal(true)}
+                                                className="px-4 py-2 shrink-0 bg-emerald-100 dark:bg-emerald-900/50 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-200 dark:hover:bg-emerald-800 rounded-lg text-sm font-semibold transition"
+                                            >
+                                                Connect Shopify
+                                            </button>
+                                        )}
+                                    </div>
                                 </div>
 
                                 <div>
@@ -712,6 +889,15 @@ export default function EcommercePage() {
                     </div>
                 </div>
             </div>
+
+            <AnimatePresence>
+                <ShopifyConnectModal 
+                    key="shopify-modal"
+                    isOpen={showShopifyModal} 
+                    onClose={() => setShowShopifyModal(false)} 
+                    getToken={getToken} 
+                />
+            </AnimatePresence>
         </>
     );
 }

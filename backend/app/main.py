@@ -8,8 +8,9 @@ from fastapi.staticfiles import StaticFiles
 import os
 load_dotenv()
 
-from app.api import twin, auth, youtube_video, video, billing, credits, billing_plan, ecommerce, chatbot
+from app.api import twin, auth, youtube_video, video, billing, credits, billing_plan, ecommerce, chatbot, shopify
 from app.routes import generator, templates
+from starlette.middleware.sessions import SessionMiddleware
 
 app = FastAPI(title="Content & Blog Generator")
 if os.path.isdir("static"):
@@ -35,6 +36,11 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+app.add_middleware(
+    SessionMiddleware,
+    secret_key=os.environ.get("SESSION_SECRET", "super-secret-key")
+)
+
 # static for videos
 #app.mount("/static", StaticFiles(directory="static"), name="static")
 
@@ -49,6 +55,7 @@ app.include_router(billing_plan.router)
 app.include_router(ecommerce.router)
 app.include_router(twin.router, prefix="/api/twin", tags=["Twin"])
 app.include_router(chatbot.router, prefix="/api/chatbot", tags=["chatbot"])
+app.include_router(shopify.router)
 
 @app.get("/")
 def root():

@@ -5,6 +5,7 @@ import httpx
 from openai import OpenAI
 from app.config import settings
 from app.core.costs import get_cost
+from app.services.deduplication_service import deduplicator, uniqueness_enhancer
 
 # ---------------------------
 # Configuration
@@ -129,8 +130,21 @@ async def get_llm_response(prompt: str):
     """Compatibility wrapper for twin.py"""
     return await generate_llm_content(prompt, "General Content")
 
-async def generate_llm_content(prompt: str, template: str):
-    """Send prompt + template to LLM and return cleaned text."""
+async def generate_llm_content(prompt: str, template: str, user_id: str = "anonymous"):
+    """
+    Send prompt + template to LLM and return cleaned text.
+    Ensures unique content by tracking generation history and adjusting parameters.
+    """
+    
+    # Track how many times this prompt has been generated recently
+    variation_count = deduplicator.get_variations_required(user_id, prompt, template)
+    
+    # Augment prompt with uniqueness instructions if this is a repeat
+    augmented_prompt = uniqueness_enhancer.augment_prompt(prompt, variation_count)
+    
+    # Adjust temperature for uniqueness
+    base_temp = 0.7
+    adjusted_temp = uniqueness_enhancer.adjust_temperature(base_temp, variation_count)
     
     system_message = (
         "You are an expert content writer. "
@@ -143,9 +157,9 @@ async def generate_llm_content(prompt: str, template: str):
         "model": settings.model_name, 
         "messages": [
             {"role": "system", "content": system_message},
-            {"role": "user", "content": prompt},
+            {"role": "user", "content": augmented_prompt},
         ],
-        "temperature": 0.7,
+        "temperature": adjusted_temp,
     }
 
     headers = {
@@ -158,6 +172,7 @@ async def generate_llm_content(prompt: str, template: str):
     print(f"[LLM DEBUG] Base URL: {settings.XAI_API_BASE}")
     print(f"[LLM DEBUG] API Key Check: {'SET' if settings.XAI_API_KEY and len(settings.XAI_API_KEY)>10 else 'MISSING/TOO SHORT'}")
     print(f"[LLM DEBUG] Model: {settings.model_name}")
+    print(f"[LLM DEBUG] Variation Count: {variation_count} | Base Temp: {base_temp} → Adjusted Temp: {adjusted_temp}")
     
     # Note: Payload includes the full prompt, which can be long.
     # print(f"[LLM DEBUG] Payload: {payload}\n") 
@@ -185,7 +200,19 @@ async def generate_llm_content(prompt: str, template: str):
     data = response.json()
     raw_text = data["choices"][0]["message"]["content"]
     
-    print(f"[LLM DEBUG] Status: SUCCESS")
+    # Apply post-processing for uniqueness
+    processed_content = uniqueness_enhancer.post_process_for_uniqueness(raw_text.strip(), "text")
+    
+    # Track this generation for deduplication
+    deduplicator.track_generation(
+        user_id=user_id,
+        prompt=prompt,
+        template=template,
+        content=processed_content,
+        content_type="text",
+    )
+    
+    print(f"[LLM DEBUG] Status: SUCCESS | Content processed for uniqueness")
     print("--- LLM API DEBUG END ---\n")
     
-    return raw_text.strip()
+    return processed_content
