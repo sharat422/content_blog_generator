@@ -6,6 +6,7 @@ from openai import OpenAI
 from app.config import settings
 from app.core.costs import get_cost
 from app.services.deduplication_service import deduplicator, uniqueness_enhancer
+from app.services.knowledge_update_service import knowledge_service
 
 # ---------------------------
 # Configuration
@@ -142,13 +143,21 @@ async def generate_llm_content(prompt: str, template: str, user_id: str = "anony
     # Augment prompt with uniqueness instructions if this is a repeat
     augmented_prompt = uniqueness_enhancer.augment_prompt(prompt, variation_count)
     
+    # Enhance with current knowledge and trends
+    knowledge_enhanced_prompt = knowledge_service.enhance_prompt_with_current_knowledge(
+        augmented_prompt, template.lower()
+    )
+    
     # Adjust temperature for uniqueness
     base_temp = 0.7
     adjusted_temp = uniqueness_enhancer.adjust_temperature(base_temp, variation_count)
     
     system_message = (
-        "You are an expert content writer. "
+        "You are an expert content writer with access to current knowledge up to 2026. "
         f"Write content using template: {template}. "
+        "Always generate content based on the latest available information and trends as of April 2026. "
+        "Extrapolate current trends and developments to create forward-thinking, contemporary content. "
+        "Include references to recent technological advancements, current events, and emerging trends. "
         "Return plain text only—no JSON or extra formatting."
     )
 
@@ -157,7 +166,7 @@ async def generate_llm_content(prompt: str, template: str, user_id: str = "anony
         "model": settings.model_name, 
         "messages": [
             {"role": "system", "content": system_message},
-            {"role": "user", "content": augmented_prompt},
+            {"role": "user", "content": knowledge_enhanced_prompt},
         ],
         "temperature": adjusted_temp,
     }

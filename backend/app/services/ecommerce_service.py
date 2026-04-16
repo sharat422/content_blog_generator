@@ -10,6 +10,7 @@ import json
 import httpx
 from app.config import settings
 from app.services.deduplication_service import deduplicator, uniqueness_enhancer
+from app.services.knowledge_update_service import knowledge_service
 
 
 # ─────────────────────────────────────────────────────────────
@@ -20,7 +21,10 @@ def _build_system_prompt(content_type: str) -> str:
     base = (
         "You are an expert ecommerce SEO copywriter with 10+ years of experience "
         "writing content that ranks on Google, converts shoppers, and follows "
-        "Amazon/Shopify/eBay best practices. "
+        "Amazon/Shopify/eBay best practices. You have access to current knowledge up to April 2026. "
+        "Always generate content based on the latest available information, current market trends, "
+        "and emerging technologies as of 2026. Include references to recent developments, "
+        "current consumer behavior, and forward-thinking insights. "
         "If pain points are provided, aggressively target them in your copy to demonstrate exactly how the product solves the customer's problem. "
         "Always respond with a single, highly structured, valid JSON object — no conversational text, no markdown, no code fences, just raw JSON."
     )
@@ -178,7 +182,12 @@ def _build_user_prompt(
         ]
         base_prompt += f"\n\nUNIQUENESS REQUIREMENT [VARIATION #{variation_count + 1}]:\n{variation_instruction}"
     
-    return base_prompt
+    # Enhance with current knowledge and trends
+    enhanced_prompt = knowledge_service.enhance_prompt_with_current_knowledge(
+        base_prompt, "product"
+    )
+    
+    return enhanced_prompt
 
 
 # ─────────────────────────────────────────────────────────────
